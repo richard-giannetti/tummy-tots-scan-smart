@@ -8,7 +8,6 @@ export interface BabyProfile {
   birth_date: string;
   allergies: string[];
   dietary_restrictions: string[];
-  notes: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -54,12 +53,7 @@ export class BabyProfileService {
       }
 
       console.log('BabyProfileService: Baby profile fetched successfully');
-      // Ensure notes field is present, default to empty string if null
-      const profileWithNotes = {
-        ...profile,
-        notes: profile.notes || ''
-      };
-      return { success: true, profile: profileWithNotes };
+      return { success: true, profile };
     } catch (error: any) {
       console.error('BabyProfileService: Unexpected error fetching baby profile:', error);
       return { success: false, error: error.message || 'An unexpected error occurred' };
@@ -89,7 +83,6 @@ export class BabyProfileService {
           birth_date: profileData.birth_date,
           allergies: profileData.allergies,
           dietary_restrictions: profileData.dietary_restrictions,
-          notes: profileData.notes,
           updated_at: new Date().toISOString()
         })
         .select()
@@ -101,12 +94,7 @@ export class BabyProfileService {
       }
 
       console.log('BabyProfileService: Baby profile saved successfully');
-      // Ensure notes field is present
-      const profileWithNotes = {
-        ...profile,
-        notes: profile.notes || ''
-      };
-      return { success: true, profile: profileWithNotes };
+      return { success: true, profile };
     } catch (error: any) {
       console.error('BabyProfileService: Unexpected error saving baby profile:', error);
       return { success: false, error: error.message || 'An unexpected error occurred' };

@@ -15,8 +15,7 @@ export const BabyProfileForm = ({ hasProfile, babyProfile, onSubmit, onCancel }:
     name: '',
     birth_date: '',
     allergies: [] as string[],
-    dietary_restrictions: [] as string[],
-    notes: ''
+    dietary_restrictions: [] as string[]
   });
 
   useEffect(() => {
@@ -25,8 +24,7 @@ export const BabyProfileForm = ({ hasProfile, babyProfile, onSubmit, onCancel }:
         name: babyProfile.name || '',
         birth_date: babyProfile.birth_date || '',
         allergies: babyProfile.allergies || [],
-        dietary_restrictions: babyProfile.dietary_restrictions || [],
-        notes: babyProfile.notes || ''
+        dietary_restrictions: babyProfile.dietary_restrictions || []
       });
     }
   }, [babyProfile]);
@@ -139,19 +137,6 @@ export const BabyProfileForm = ({ hasProfile, babyProfile, onSubmit, onCancel }:
               </button>
             ))}
           </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Additional Notes
-          </label>
-          <textarea
-            value={formData.notes}
-            onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-            placeholder="Any additional information about your baby's eating habits or preferences..."
-            rows={3}
-          />
         </div>
 
         <div className="flex space-x-3 pt-2">
