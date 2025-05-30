@@ -7,7 +7,7 @@ import { BabyProfileDisplay } from './BabyProfileDisplay';
 interface BabyProfileCardProps {
   hasProfile: boolean;
   babyProfile: BabyProfile | null;
-  onProfileComplete: (profileData: Omit<BabyProfile, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => void;
+  onProfileComplete: (profileData: Omit<BabyProfile, 'id' | 'user_id' | 'created_at'>) => void;
 }
 
 export const BabyProfileCard = ({ hasProfile, babyProfile, onProfileComplete }: BabyProfileCardProps) => {

@@ -9,7 +9,6 @@ export interface BabyProfile {
   allergies: string[];
   dietary_restrictions: string[];
   created_at?: string;
-  updated_at?: string;
 }
 
 export interface BabyProfileResponse {
@@ -63,7 +62,7 @@ export class BabyProfileService {
   /**
    * Create or update the current user's baby profile
    */
-  static async saveBabyProfile(profileData: Omit<BabyProfile, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<BabyProfileResponse> {
+  static async saveBabyProfile(profileData: Omit<BabyProfile, 'id' | 'user_id' | 'created_at'>): Promise<BabyProfileResponse> {
     try {
       console.log('BabyProfileService: Saving baby profile');
       
@@ -82,8 +81,7 @@ export class BabyProfileService {
           name: profileData.name,
           birth_date: profileData.birth_date,
           allergies: profileData.allergies,
-          dietary_restrictions: profileData.dietary_restrictions,
-          updated_at: new Date().toISOString()
+          dietary_restrictions: profileData.dietary_restrictions
         })
         .select()
         .single();

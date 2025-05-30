@@ -6,7 +6,7 @@ import { BabyProfile } from '@/services/babyProfileService';
 interface BabyProfileFormProps {
   hasProfile: boolean;
   babyProfile: BabyProfile | null;
-  onSubmit: (profileData: Omit<BabyProfile, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => void;
+  onSubmit: (profileData: Omit<BabyProfile, 'id' | 'user_id' | 'created_at'>) => void;
   onCancel?: () => void;
 }
 

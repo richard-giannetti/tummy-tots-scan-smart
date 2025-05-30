@@ -55,7 +55,7 @@ export const Homepage = () => {
     setLanguage(language === 'en' ? 'es' : 'en');
   };
 
-  const handleBabyProfileComplete = async (profileData: Omit<BabyProfile, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+  const handleBabyProfileComplete = async (profileData: Omit<BabyProfile, 'id' | 'user_id' | 'created_at'>) => {
     try {
       const result = await BabyProfileService.saveBabyProfile(profileData);
       
