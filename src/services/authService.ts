@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 
@@ -44,6 +45,11 @@ export class AuthService {
       if (error) {
         console.error('AuthService: Signup error:', error);
         return { success: false, error: error.message };
+      }
+
+      // Check if user needs email confirmation
+      if (authData.user && !authData.session) {
+        return { success: false, error: 'Please check your email to confirm your account before signing in.' };
       }
 
       console.log('AuthService: Signup successful for:', authData.user?.email);

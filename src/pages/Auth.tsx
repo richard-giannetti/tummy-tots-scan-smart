@@ -46,6 +46,17 @@ const Auth = () => {
         const result = await AuthService.signUp({ email, password, fullName });
         
         if (!result.success) {
+          // Handle specific email confirmation error
+          if (result.error?.includes('check your email')) {
+            toast({
+              title: "Email Confirmation Required",
+              description: "Please check your email and click the confirmation link, then return to sign in.",
+              variant: "destructive",
+            });
+            // Switch to login mode
+            setIsLogin(true);
+            return;
+          }
           throw new Error(result.error);
         }
         
