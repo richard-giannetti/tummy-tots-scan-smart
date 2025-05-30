@@ -1,32 +1,40 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { OnboardingFlow } from '../components/OnboardingFlow';
 import { Homepage } from '../components/Homepage';
 
 const Index = () => {
+  const { user, loading } = useAuth();
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // Mock logged in state
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
 
   const handleOnboardingComplete = () => {
     setHasCompletedOnboarding(true);
   };
 
-  if (!isLoggedIn) {
-    // This would be the authentication flow
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-800 mb-4">Welcome to Healthy Tummies</h1>
-          <p className="text-gray-600 mb-8">Smart food choices for your little one</p>
-          <button 
-            onClick={() => setIsLoggedIn(true)}
-            className="bg-pink-500 text-white px-8 py-3 rounded-full font-semibold hover:bg-pink-600 transition-colors"
-          >
-            Get Started
-          </button>
+          <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <span className="text-white font-bold text-xl">HT</span>
+          </div>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
+  }
+
+  if (!user) {
+    return null; // Will redirect to auth
   }
 
   if (!hasCompletedOnboarding) {

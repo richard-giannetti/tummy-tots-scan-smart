@@ -9,13 +9,137 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      baby_profiles: {
+        Row: {
+          allergies: string[] | null
+          birth_date: string
+          created_at: string | null
+          dietary_restrictions: string[] | null
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          allergies?: string[] | null
+          birth_date: string
+          created_at?: string | null
+          dietary_restrictions?: string[] | null
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          allergies?: string[] | null
+          birth_date?: string
+          created_at?: string | null
+          dietary_restrictions?: string[] | null
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "baby_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scan_summary: {
+        Row: {
+          average_score: number | null
+          created_at: string | null
+          id: string
+          scan_count: number | null
+          scan_date: string
+          user_id: string
+        }
+        Insert: {
+          average_score?: number | null
+          created_at?: string | null
+          id?: string
+          scan_count?: number | null
+          scan_date?: string
+          user_id: string
+        }
+        Update: {
+          average_score?: number | null
+          created_at?: string | null
+          id?: string
+          scan_count?: number | null
+          scan_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scan_summary_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          last_scan_date: string | null
+          month_start_date: string | null
+          monthly_scan_count: number | null
+          onboarding_completed: boolean | null
+          total_scans_count: number | null
+          updated_at: string | null
+          week_start_date: string | null
+          weekly_scan_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          last_scan_date?: string | null
+          month_start_date?: string | null
+          monthly_scan_count?: number | null
+          onboarding_completed?: boolean | null
+          total_scans_count?: number | null
+          updated_at?: string | null
+          week_start_date?: string | null
+          weekly_scan_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          last_scan_date?: string | null
+          month_start_date?: string | null
+          monthly_scan_count?: number | null
+          onboarding_completed?: boolean | null
+          total_scans_count?: number | null
+          updated_at?: string | null
+          week_start_date?: string | null
+          weekly_scan_count?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_old_scan_summaries: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      update_scan_tracking: {
+        Args: { user_uuid: string; scan_score?: number }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

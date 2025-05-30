@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import { Camera, Clock, BookOpen, User, Globe, Settings } from 'lucide-react';
+import { Camera, Clock, BookOpen, User, Globe, Settings, LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { BabyProfileCard } from './BabyProfileCard';
 import { ScanButton } from './ScanButton';
 import { RecentScans } from './RecentScans';
@@ -10,6 +11,7 @@ export const Homepage = () => {
   const [language, setLanguage] = useState('en');
   const [hasBabyProfile, setHasBabyProfile] = useState(false);
   const [babyName, setBabyName] = useState('');
+  const { signOut } = useAuth();
 
   const toggleLanguage = () => {
     setLanguage(language === 'en' ? 'es' : 'en');
@@ -18,6 +20,10 @@ export const Homepage = () => {
   const handleBabyProfileComplete = (name: string) => {
     setBabyName(name);
     setHasBabyProfile(true);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   return (
@@ -41,8 +47,12 @@ export const Homepage = () => {
               <Globe className="w-5 h-5" />
               <span className="text-sm font-medium">{language.toUpperCase()}</span>
             </button>
-            <button className="text-gray-600 hover:text-gray-800">
-              <User className="w-6 h-6" />
+            <button 
+              onClick={handleSignOut}
+              className="text-gray-600 hover:text-gray-800"
+              title="Sign out"
+            >
+              <LogOut className="w-5 h-5" />
             </button>
           </div>
         </div>
