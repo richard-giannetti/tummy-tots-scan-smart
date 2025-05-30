@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Camera, Heart, Shield, Globe } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Camera, Heart, Shield } from 'lucide-react';
 
 interface OnboardingFlowProps {
   onComplete: () => void;
@@ -8,7 +8,6 @@ interface OnboardingFlowProps {
 
 export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [selectedLanguage, setSelectedLanguage] = useState('en');
 
   const steps = [
     {
@@ -94,43 +93,6 @@ export const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
               <h4 className="font-semibold text-gray-800 mb-2">Science-Backed</h4>
               <p className="text-gray-600 text-sm">Based on pediatric nutrition guidelines</p>
             </div>
-          </div>
-        </div>
-      )
-    },
-    {
-      title: "Choose Your Language",
-      subtitle: "Select your preferred language",
-      content: (
-        <div className="text-center space-y-6">
-          <Globe className="w-16 h-16 text-blue-500 mx-auto" />
-          <div className="space-y-4">
-            <button
-              onClick={() => setSelectedLanguage('en')}
-              className={`w-full p-4 rounded-lg border-2 transition-colors ${
-                selectedLanguage === 'en' 
-                  ? 'border-pink-500 bg-pink-50' 
-                  : 'border-gray-200 bg-white'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-semibold">English</span>
-                <span className="text-2xl">🇺🇸</span>
-              </div>
-            </button>
-            <button
-              onClick={() => setSelectedLanguage('es')}
-              className={`w-full p-4 rounded-lg border-2 transition-colors ${
-                selectedLanguage === 'es' 
-                  ? 'border-pink-500 bg-pink-50' 
-                  : 'border-gray-200 bg-white'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-semibold">Español</span>
-                <span className="text-2xl">🇪🇸</span>
-              </div>
-            </button>
           </div>
         </div>
       )

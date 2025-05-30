@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 
@@ -117,6 +116,71 @@ export class AuthService {
       return { success: true, session, user: session?.user };
     } catch (error: any) {
       console.error('AuthService: Unexpected session error:', error);
+      return { success: false, error: error.message || 'An unexpected error occurred' };
+    }
+  }
+
+  /**
+   * Mark onboarding as completed for the current user
+   */
+  static async completeOnboarding(): Promise<AuthResponse> {
+    try {
+      console.log('AuthService: Marking onboarding as completed');
+      
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        console.error('AuthService: No authenticated user found');
+        return { success: false, error: 'No authenticated user found' };
+      }
+
+      const { error } = await supabase
+        .from('users')
+        .update({ onboarding_completed: true })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('AuthService: Error updating onboarding status:', error);
+        return { success: false, error: error.message };
+      }
+
+      console.log('AuthService: Onboarding completed successfully');
+      return { success: true };
+    } catch (error: any) {
+      console.error('AuthService: Unexpected error completing onboarding:', error);
+      return { success: false, error: error.message || 'An unexpected error occurred' };
+    }
+  }
+
+  /**
+   * Get user profile data including onboarding status
+   */
+  static async getUserProfile(): Promise<AuthResponse & { profile?: any }> {
+    try {
+      console.log('AuthService: Fetching user profile');
+      
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        console.error('AuthService: No authenticated user found');
+        return { success: false, error: 'No authenticated user found' };
+      }
+
+      const { data: profile, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.error('AuthService: Error fetching user profile:', error);
+        return { success: false, error: error.message };
+      }
+
+      console.log('AuthService: Profile fetched successfully');
+      return { success: true, user, profile };
+    } catch (error: any) {
+      console.error('AuthService: Unexpected error fetching profile:', error);
       return { success: false, error: error.message || 'An unexpected error occurred' };
     }
   }
