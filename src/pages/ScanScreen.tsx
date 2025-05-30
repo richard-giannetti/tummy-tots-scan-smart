@@ -4,29 +4,29 @@ import { Camera, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useScanTracking } from '@/hooks/useScanTracking';
+import { ScanService } from '@/services/scanService';
 import { MESSAGES, ROUTES } from '@/constants/app';
 
 const ScanScreen = () => {
   const navigate = useNavigate();
-  const { recordScan, generateMockScan } = useScanTracking();
+  const { recordScan } = useScanTracking();
 
   const handleBackClick = () => {
     navigate(ROUTES.HOME);
   };
 
   const handleTestScan = async () => {
-    const mockResult = generateMockScan();
-    
-    // Record the scan in the database
-    await recordScan(mockResult.score);
+    const mockResult = ScanService.generateMockScanResult();
     
     toast({
       title: MESSAGES.SCAN.TEST_COMPLETE,
-      description: `${mockResult.productName} scored ${mockResult.score}/100. ${MESSAGES.SCAN.RECORDED}`,
+      description: `${mockResult.product.productName} scored ${mockResult.healthyTummiesScore}/100`,
     });
     
-    // Navigate back to homepage to see the updated scan count
-    navigate(ROUTES.HOME);
+    // Navigate to scan result screen with the result data
+    navigate('/scan-result', { 
+      state: { scanResult: mockResult }
+    });
   };
 
   return (
