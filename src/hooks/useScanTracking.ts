@@ -1,7 +1,7 @@
 
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { ScanService } from '@/services/scanService';
 
 export const useScanTracking = () => {
   const { user } = useAuth();
@@ -9,30 +9,31 @@ export const useScanTracking = () => {
   const recordScan = async (score?: number) => {
     if (!user) {
       console.error('User not authenticated');
+      toast({
+        title: "Error",
+        description: "You must be logged in to record scans",
+        variant: "destructive",
+      });
       return;
     }
 
-    try {
-      const { error } = await supabase.rpc('update_scan_tracking', {
-        user_uuid: user.id,
-        scan_score: score || null
-      });
-
-      if (error) {
-        console.error('Error recording scan:', error);
-        throw error;
-      }
-
-      console.log('Scan recorded successfully');
-    } catch (error: any) {
-      console.error('Failed to record scan:', error);
+    const result = await ScanService.recordScan(user.id, score);
+    
+    if (!result.success) {
       toast({
         title: "Error",
-        description: "Failed to record scan data",
+        description: result.error || "Failed to record scan data",
         variant: "destructive",
       });
+      return;
     }
+
+    console.log('Scan recorded successfully');
   };
 
-  return { recordScan };
+  const generateMockScan = () => {
+    return ScanService.generateMockScanResult();
+  };
+
+  return { recordScan, generateMockScan };
 };

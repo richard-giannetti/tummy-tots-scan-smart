@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { AuthService } from '@/services/authService';
+import { MESSAGES, ROUTES, APP_CONFIG } from '@/constants/app';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -17,7 +18,8 @@ const Auth = () => {
   // Redirect if already logged in
   React.useEffect(() => {
     if (user) {
-      navigate('/');
+      console.log('User already authenticated, redirecting to homepage');
+      navigate(ROUTES.HOME);
     }
   }, [user, navigate]);
 
@@ -27,39 +29,39 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
+        const result = await AuthService.signIn({ email, password });
+        
+        if (!result.success) {
+          throw new Error(result.error);
+        }
         
         toast({
-          title: "Welcome back!",
-          description: "You've been successfully logged in.",
+          title: MESSAGES.AUTH.WELCOME_BACK,
+          description: MESSAGES.AUTH.LOGIN_SUCCESS,
         });
-        navigate('/');
+        
+        // Force page refresh for clean state
+        window.location.href = ROUTES.HOME;
       } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: fullName,
-            }
-          }
-        });
-        if (error) throw error;
+        const result = await AuthService.signUp({ email, password, fullName });
+        
+        if (!result.success) {
+          throw new Error(result.error);
+        }
         
         toast({
-          title: "Account created!",
-          description: "Welcome to Healthy Tummies!",
+          title: MESSAGES.AUTH.ACCOUNT_CREATED,
+          description: MESSAGES.AUTH.SIGNUP_SUCCESS,
         });
-        navigate('/');
+        
+        // Force page refresh for clean state
+        window.location.href = ROUTES.HOME;
       }
     } catch (error: any) {
+      console.error('Authentication error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || MESSAGES.AUTH.GENERIC_ERROR,
         variant: "destructive",
       });
     } finally {
@@ -78,7 +80,7 @@ const Auth = () => {
             {isLogin ? 'Welcome back' : 'Create your account'}
           </h2>
           <p className="mt-2 text-gray-600">
-            {isLogin ? 'Sign in to your account' : 'Start your journey with Healthy Tummies'}
+            {isLogin ? 'Sign in to your account' : `Start your journey with ${APP_CONFIG.NAME}`}
           </p>
         </div>
 
@@ -133,6 +135,7 @@ const Auth = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500"
                 placeholder="Enter your password"
+                minLength={APP_CONFIG.PASSWORD_MIN_LENGTH}
               />
             </div>
           </div>

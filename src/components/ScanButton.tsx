@@ -1,27 +1,18 @@
 
 import React from 'react';
 import { Camera, Zap } from 'lucide-react';
-import { useScanTracking } from '@/hooks/useScanTracking';
-import { toast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface ScanButtonProps {
   babyName: string;
 }
 
 export const ScanButton = ({ babyName }: ScanButtonProps) => {
-  const { recordScan } = useScanTracking();
+  const navigate = useNavigate();
 
-  const handleScanClick = async () => {
-    // Simulate a scan with a random score between 60-95
-    const mockScore = Math.floor(Math.random() * 35) + 60;
-    
-    // Record the scan in the database
-    await recordScan(mockScore);
-    
-    toast({
-      title: "Scan Complete!",
-      description: `Product scored ${mockScore}/100. Scan recorded in your history.`,
-    });
+  const handleScanClick = () => {
+    console.log('Navigating to scan screen');
+    navigate('/scan');
   };
 
   return (
