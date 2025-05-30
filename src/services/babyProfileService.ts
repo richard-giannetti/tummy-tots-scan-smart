@@ -54,7 +54,12 @@ export class BabyProfileService {
       }
 
       console.log('BabyProfileService: Baby profile fetched successfully');
-      return { success: true, profile };
+      // Ensure notes field is present, default to empty string if null
+      const profileWithNotes = {
+        ...profile,
+        notes: profile.notes || ''
+      };
+      return { success: true, profile: profileWithNotes };
     } catch (error: any) {
       console.error('BabyProfileService: Unexpected error fetching baby profile:', error);
       return { success: false, error: error.message || 'An unexpected error occurred' };
@@ -96,7 +101,12 @@ export class BabyProfileService {
       }
 
       console.log('BabyProfileService: Baby profile saved successfully');
-      return { success: true, profile };
+      // Ensure notes field is present
+      const profileWithNotes = {
+        ...profile,
+        notes: profile.notes || ''
+      };
+      return { success: true, profile: profileWithNotes };
     } catch (error: any) {
       console.error('BabyProfileService: Unexpected error saving baby profile:', error);
       return { success: false, error: error.message || 'An unexpected error occurred' };
