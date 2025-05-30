@@ -1,30 +1,105 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Camera, Clock, BookOpen, User, Globe, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { BabyProfileCard } from './BabyProfileCard';
 import { ScanButton } from './ScanButton';
 import { RecentScans } from './RecentScans';
 import { RecipeRecommendations } from './RecipeRecommendations';
+import { BabyProfileService, BabyProfile } from '@/services/babyProfileService';
+import { toast } from '@/hooks/use-toast';
 
 export const Homepage = () => {
   const [language, setLanguage] = useState('en');
   const [hasBabyProfile, setHasBabyProfile] = useState(false);
-  const [babyName, setBabyName] = useState('');
-  const { signOut } = useAuth();
+  const [babyProfile, setBabyProfile] = useState<BabyProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const { signOut, user } = useAuth();
+
+  // Load baby profile on component mount
+  useEffect(() => {
+    const loadBabyProfile = async () => {
+      if (!user) return;
+
+      try {
+        setProfileLoading(true);
+        const result = await BabyProfileService.getBabyProfile();
+        
+        if (result.success) {
+          if (result.profile) {
+            setBabyProfile(result.profile);
+            setHasBabyProfile(true);
+          } else {
+            setBabyProfile(null);
+            setHasBabyProfile(false);
+          }
+        } else {
+          console.error('Failed to load baby profile:', result.error);
+          toast({
+            title: "Error",
+            description: "Failed to load baby profile. Please try again.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error('Error loading baby profile:', error);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    loadBabyProfile();
+  }, [user]);
 
   const toggleLanguage = () => {
     setLanguage(language === 'en' ? 'es' : 'en');
   };
 
-  const handleBabyProfileComplete = (name: string) => {
-    setBabyName(name);
-    setHasBabyProfile(true);
+  const handleBabyProfileComplete = async (profileData: Omit<BabyProfile, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const result = await BabyProfileService.saveBabyProfile(profileData);
+      
+      if (result.success && result.profile) {
+        setBabyProfile(result.profile);
+        setHasBabyProfile(true);
+        toast({
+          title: "Profile Saved!",
+          description: "Your baby's profile has been saved successfully.",
+        });
+      } else {
+        console.error('Failed to save baby profile:', result.error);
+        toast({
+          title: "Error",
+          description: "Failed to save baby profile. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error saving baby profile:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSignOut = async () => {
     await signOut();
   };
+
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <span className="text-white font-bold text-xl">HT</span>
+          </div>
+          <p className="text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
@@ -63,18 +138,18 @@ export const Homepage = () => {
         {/* Baby Profile Card */}
         <BabyProfileCard 
           hasProfile={hasBabyProfile}
-          babyName={babyName}
+          babyProfile={babyProfile}
           onProfileComplete={handleBabyProfileComplete}
         />
 
         {/* Scan Action Card */}
-        <ScanButton babyName={babyName} />
+        <ScanButton babyName={babyProfile?.name || ''} />
 
         {/* Recent Scans */}
         {hasBabyProfile && <RecentScans />}
 
         {/* Recipe Recommendations */}
-        {hasBabyProfile && <RecipeRecommendations babyName={babyName} />}
+        {hasBabyProfile && <RecipeRecommendations babyName={babyProfile?.name || ''} />}
 
         {/* Education Section */}
         <div className="bg-white rounded-2xl p-6 shadow-sm">

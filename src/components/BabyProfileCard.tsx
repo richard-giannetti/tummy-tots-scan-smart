@@ -1,30 +1,44 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Baby, Edit3, Calendar, AlertTriangle } from 'lucide-react';
+import { BabyProfile } from '@/services/babyProfileService';
 
 interface BabyProfileCardProps {
   hasProfile: boolean;
-  babyName: string;
-  onProfileComplete: (name: string) => void;
+  babyProfile: BabyProfile | null;
+  onProfileComplete: (profileData: Omit<BabyProfile, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => void;
 }
 
-export const BabyProfileCard = ({ hasProfile, babyName, onProfileComplete }: BabyProfileCardProps) => {
+export const BabyProfileCard = ({ hasProfile, babyProfile, onProfileComplete }: BabyProfileCardProps) => {
   const [isEditing, setIsEditing] = useState(!hasProfile);
   const [formData, setFormData] = useState({
-    name: babyName,
-    birthDate: '',
+    name: '',
+    birth_date: '',
     allergies: [] as string[],
-    dietaryRestrictions: [] as string[],
+    dietary_restrictions: [] as string[],
     notes: ''
   });
+
+  // Update form data when babyProfile changes
+  useEffect(() => {
+    if (babyProfile) {
+      setFormData({
+        name: babyProfile.name || '',
+        birth_date: babyProfile.birth_date || '',
+        allergies: babyProfile.allergies || [],
+        dietary_restrictions: babyProfile.dietary_restrictions || [],
+        notes: babyProfile.notes || ''
+      });
+    }
+  }, [babyProfile]);
 
   const allergyOptions = ['Dairy', 'Eggs', 'Nuts', 'Soy', 'Wheat', 'Shellfish'];
   const dietaryOptions = ['Vegetarian', 'Vegan', 'Halal', 'Kosher'];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.name.trim()) {
-      onProfileComplete(formData.name);
+    if (formData.name.trim() && formData.birth_date) {
+      onProfileComplete(formData);
       setIsEditing(false);
     }
   };
@@ -41,9 +55,9 @@ export const BabyProfileCard = ({ hasProfile, babyName, onProfileComplete }: Bab
   const toggleDietaryRestriction = (restriction: string) => {
     setFormData(prev => ({
       ...prev,
-      dietaryRestrictions: prev.dietaryRestrictions.includes(restriction)
-        ? prev.dietaryRestrictions.filter(r => r !== restriction)
-        : [...prev.dietaryRestrictions, restriction]
+      dietary_restrictions: prev.dietary_restrictions.includes(restriction)
+        ? prev.dietary_restrictions.filter(r => r !== restriction)
+        : [...prev.dietary_restrictions, restriction]
     }));
   };
 
@@ -78,8 +92,8 @@ export const BabyProfileCard = ({ hasProfile, babyName, onProfileComplete }: Bab
             </label>
             <input
               type="date"
-              value={formData.birthDate}
-              onChange={(e) => setFormData(prev => ({ ...prev, birthDate: e.target.value }))}
+              value={formData.birth_date}
+              onChange={(e) => setFormData(prev => ({ ...prev, birth_date: e.target.value }))}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
               max={new Date().toISOString().split('T')[0]}
               required
@@ -119,7 +133,7 @@ export const BabyProfileCard = ({ hasProfile, babyName, onProfileComplete }: Bab
                   type="button"
                   onClick={() => toggleDietaryRestriction(restriction)}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    formData.dietaryRestrictions.includes(restriction)
+                    formData.dietary_restrictions.includes(restriction)
                       ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
                       : 'bg-gray-100 text-gray-700 border-2 border-transparent hover:bg-gray-200'
                   }`}
@@ -165,8 +179,12 @@ export const BabyProfileCard = ({ hasProfile, babyName, onProfileComplete }: Bab
     );
   }
 
-  const babyAge = formData.birthDate ? 
-    Math.floor((new Date().getTime() - new Date(formData.birthDate).getTime()) / (1000 * 60 * 60 * 24 * 30.44)) : 0;
+  if (!babyProfile) {
+    return null;
+  }
+
+  const babyAge = babyProfile.birth_date ? 
+    Math.floor((new Date().getTime() - new Date(babyProfile.birth_date).getTime()) / (1000 * 60 * 60 * 24 * 30.44)) : 0;
 
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm">
@@ -176,7 +194,7 @@ export const BabyProfileCard = ({ hasProfile, babyName, onProfileComplete }: Bab
             <Baby className="w-6 h-6 text-pink-600" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-800">{babyName}</h3>
+            <h3 className="text-lg font-bold text-gray-800">{babyProfile.name}</h3>
             <p className="text-sm text-gray-600">{babyAge} months old</p>
           </div>
         </div>
@@ -188,19 +206,19 @@ export const BabyProfileCard = ({ hasProfile, babyName, onProfileComplete }: Bab
         </button>
       </div>
 
-      {formData.allergies.length > 0 && (
+      {babyProfile.allergies && babyProfile.allergies.length > 0 && (
         <div className="flex items-start space-x-2 mb-3">
           <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
           <div>
             <p className="text-sm font-medium text-gray-700">Allergies:</p>
-            <p className="text-sm text-gray-600">{formData.allergies.join(', ')}</p>
+            <p className="text-sm text-gray-600">{babyProfile.allergies.join(', ')}</p>
           </div>
         </div>
       )}
 
-      {formData.dietaryRestrictions.length > 0 && (
+      {babyProfile.dietary_restrictions && babyProfile.dietary_restrictions.length > 0 && (
         <div className="text-sm text-gray-600">
-          <span className="font-medium">Diet:</span> {formData.dietaryRestrictions.join(', ')}
+          <span className="font-medium">Diet:</span> {babyProfile.dietary_restrictions.join(', ')}
         </div>
       )}
     </div>
