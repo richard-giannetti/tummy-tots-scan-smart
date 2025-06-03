@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Camera, ArrowLeft, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -34,6 +35,7 @@ const ScanScreen = () => {
     console.log('Barcode scanned successfully:', code);
     setScannedCode(code);
     setIsCameraActive(false);
+    setScanError(''); // Clear any previous errors
     
     toast({
       title: "Barcode Detected!",
@@ -42,8 +44,15 @@ const ScanScreen = () => {
   };
 
   const handleScanError = (error: any) => {
-    console.error('Scan error:', error);
-    setScanError('Failed to access camera. Please check permissions.');
+    console.log('Scan attempt:', error?.message || 'No barcode detected');
+    
+    // Only show error messages for actual camera/permission issues
+    // Not for normal "no barcode found" scanning attempts
+    if (error?.message && !error.message.includes('No MultiFormat Readers were able to detect the code')) {
+      console.error('Camera error:', error);
+      setScanError('Failed to access camera. Please check permissions and try again.');
+    }
+    // For "no barcode detected" errors, we just log them but don't show error UI
   };
 
   const handleProcessScan = async () => {
