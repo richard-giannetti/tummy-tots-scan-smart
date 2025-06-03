@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Camera, ArrowLeft, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -7,7 +6,7 @@ import { useScanTracking } from '@/hooks/useScanTracking';
 import { ScanService } from '@/services/scanService';
 import { MESSAGES, ROUTES } from '@/constants/app';
 import ScanLoadingScreen from '@/components/ScanLoadingScreen';
-import { BarcodeScannerComponent } from 'react-qr-barcode-scanner';
+import BarcodeScannerComponent from 'react-qr-barcode-scanner';
 
 const ScanScreen = () => {
   const navigate = useNavigate();
