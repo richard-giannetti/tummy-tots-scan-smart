@@ -1,21 +1,27 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Camera, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useScanTracking } from '@/hooks/useScanTracking';
 import { ScanService } from '@/services/scanService';
 import { MESSAGES, ROUTES } from '@/constants/app';
+import ScanLoadingScreen from '@/components/ScanLoadingScreen';
 
 const ScanScreen = () => {
   const navigate = useNavigate();
   const { recordScan } = useScanTracking();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleBackClick = () => {
     navigate(ROUTES.HOME);
   };
 
   const handleTestScan = async () => {
+    setIsLoading(true);
+  };
+
+  const handleLoadingComplete = () => {
     const mockResult = ScanService.generateMockScanResult();
     
     toast({
@@ -28,6 +34,11 @@ const ScanScreen = () => {
       state: { scanResult: mockResult }
     });
   };
+
+  // Show loading screen when scanning
+  if (isLoading) {
+    return <ScanLoadingScreen onComplete={handleLoadingComplete} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
