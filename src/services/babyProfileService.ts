@@ -82,7 +82,8 @@ export class BabyProfileService {
           name: profileData.name,
           birth_date: profileData.birth_date,
           allergies: profileData.allergies,
-          dietary_restrictions: profileData.dietary_restrictions
+          dietary_restrictions: profileData.dietary_restrictions,
+          avatar_url: profileData.avatar_url
         })
         .select()
         .single();

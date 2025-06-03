@@ -24,11 +24,13 @@ export const AvatarUploadDialog = ({ isOpen, onClose, onAvatarUpdate, babyName }
   const handleFileUpload = async (file: File) => {
     if (!file) return;
 
+    console.log('Processing file upload:', file.name, file.size, file.type);
+
     // Validate file type
     if (!file.type.startsWith('image/')) {
       toast({
         title: "Invalid file type",
-        description: "Please select an image file.",
+        description: "Please select an image file (JPG, PNG, etc.).",
         variant: "destructive",
       });
       return;
@@ -50,20 +52,27 @@ export const AvatarUploadDialog = ({ isOpen, onClose, onAvatarUpdate, babyName }
       reader.onload = (e) => {
         const result = e.target?.result as string;
         if (result) {
+          console.log('File converted to data URL successfully');
           onAvatarUpdate(result);
-          toast({
-            title: "Avatar updated!",
-            description: `${babyName}'s photo has been updated.`,
-          });
           onClose();
         }
       };
+      
+      reader.onerror = () => {
+        console.error('Error reading file');
+        toast({
+          title: "Upload failed",
+          description: "Failed to read the image file. Please try again.",
+          variant: "destructive",
+        });
+      };
+      
       reader.readAsDataURL(file);
     } catch (error) {
-      console.error('Error uploading avatar:', error);
+      console.error('Error processing avatar upload:', error);
       toast({
         title: "Upload failed",
-        description: "Failed to upload the image. Please try again.",
+        description: "Failed to process the image. Please try again.",
         variant: "destructive",
       });
     }
@@ -80,8 +89,11 @@ export const AvatarUploadDialog = ({ isOpen, onClose, onAvatarUpdate, babyName }
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      console.log('File selected:', file.name);
       handleFileUpload(file);
     }
+    // Reset the input value so the same file can be selected again
+    event.target.value = '';
   };
 
   return (

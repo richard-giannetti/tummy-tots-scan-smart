@@ -31,15 +31,30 @@ export const BabyProfileCard = ({ hasProfile, babyProfile, onProfileComplete }: 
     if (!babyProfile) return;
 
     try {
-      const updatedProfile = { ...babyProfile, avatar_url: avatarUrl };
-      const result = await BabyProfileService.saveBabyProfile(updatedProfile);
+      console.log('Updating avatar with URL:', avatarUrl);
+      
+      // Create updated profile with new avatar URL
+      const updatedProfileData = {
+        name: babyProfile.name,
+        birth_date: babyProfile.birth_date,
+        allergies: babyProfile.allergies,
+        dietary_restrictions: babyProfile.dietary_restrictions,
+        avatar_url: avatarUrl
+      };
+
+      const result = await BabyProfileService.saveBabyProfile(updatedProfileData);
       
       if (result.success && result.profile) {
         onProfileComplete(result.profile);
+        toast({
+          title: "Success!",
+          description: "Avatar updated successfully!",
+        });
       } else {
+        console.error('Failed to update avatar:', result.error);
         toast({
           title: "Error",
-          description: "Failed to update avatar. Please try again.",
+          description: result.error || "Failed to update avatar. Please try again.",
           variant: "destructive",
         });
       }
