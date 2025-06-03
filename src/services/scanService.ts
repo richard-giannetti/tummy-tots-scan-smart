@@ -62,14 +62,21 @@ export class ScanService {
     try {
       console.log('ScanService: Fetching product data for barcode:', barcode);
       
+      // Clean and validate barcode
+      const cleanBarcode = barcode.trim().replace(/\D/g, '');
+      if (!cleanBarcode || cleanBarcode.length < 8) {
+        console.log('ScanService: Invalid barcode format');
+        return null;
+      }
+      
       // Check cache first
-      const cached = this._getCachedResult(barcode);
+      const cached = this._getCachedResult(cleanBarcode);
       if (cached) {
         console.log('ScanService: Using cached result');
         return cached;
       }
 
-      const response = await fetch(`${this.BASE_URL}${barcode}.json`);
+      const response = await fetch(`${this.BASE_URL}${cleanBarcode}.json`);
       
       if (!response.ok) {
         console.error('ScanService: API request failed:', response.status);
@@ -79,15 +86,17 @@ export class ScanService {
       const data = await response.json();
       
       if (data.status === 0) {
-        console.log('ScanService: Product not found');
+        console.log('ScanService: Product not found in Open Food Facts database');
         return null;
       }
 
       const productData = this._formatProductData(data.product);
+      productData.barcode = cleanBarcode;
       
       // Cache the result
-      this._cacheResult(barcode, productData);
+      this._cacheResult(cleanBarcode, productData);
       
+      console.log('ScanService: Product data fetched successfully:', productData.productName);
       return productData;
     } catch (error: any) {
       console.error('ScanService: Error fetching product:', error);
