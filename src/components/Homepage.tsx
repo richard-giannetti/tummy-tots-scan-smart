@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Camera, Clock, BookOpen, User, Globe, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,6 +5,7 @@ import { BabyProfileCard } from './BabyProfileCard';
 import { ScanButton } from './ScanButton';
 import { RecentScans } from './RecentScans';
 import { RecipeRecommendations } from './RecipeRecommendations';
+import { HeaderMenu } from './HeaderMenu';
 import { BabyProfileService, BabyProfile } from '@/services/babyProfileService';
 import { toast } from '@/hooks/use-toast';
 
@@ -114,22 +114,11 @@ export const Homepage = () => {
               <h1 className="text-lg font-bold text-gray-800">Healthy Tummies</h1>
             </div>
           </div>
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={toggleLanguage}
-              className="flex items-center space-x-1 text-gray-600 hover:text-gray-800"
-            >
-              <Globe className="w-5 h-5" />
-              <span className="text-sm font-medium">{language.toUpperCase()}</span>
-            </button>
-            <button 
-              onClick={handleSignOut}
-              className="text-gray-600 hover:text-gray-800"
-              title="Sign out"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
-          </div>
+          <HeaderMenu 
+            language={language}
+            onToggleLanguage={toggleLanguage}
+            onSignOut={handleSignOut}
+          />
         </div>
       </header>
 
