@@ -40,6 +40,7 @@ export const ROUTES = {
   HOME: '/',
   AUTH: '/auth',
   SCAN: '/scan',
+  SEARCH: '/search',
 } as const;
 
 // App Configuration

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Clock, BookOpen, User, Globe, Settings, LogOut } from 'lucide-react';
+import { Camera, Clock, BookOpen, User, Globe, Settings, LogOut, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { BabyProfileCard } from './BabyProfileCard';
 import { ScanButton } from './ScanButton';
@@ -93,6 +93,11 @@ export const Homepage = () => {
   const handleScanClick = () => {
     console.log('Navigating to scan screen');
     navigate('/scan');
+  };
+
+  const handleSearchClick = () => {
+    console.log('Navigating to search screen');
+    navigate('/search');
   };
 
   if (profileLoading) {
@@ -213,9 +218,12 @@ export const Homepage = () => {
               <BookOpen className="w-6 h-6 mb-1" />
               <span className="text-xs">Recipes</span>
             </button>
-            <button className="flex flex-col items-center py-2 px-3 text-gray-400">
-              <Settings className="w-6 h-6 mb-1" />
-              <span className="text-xs">Settings</span>
+            <button 
+              onClick={handleSearchClick}
+              className="flex flex-col items-center py-2 px-3 text-gray-400"
+            >
+              <Search className="w-6 h-6 mb-1" />
+              <span className="text-xs">Search</span>
             </button>
           </div>
         </div>
