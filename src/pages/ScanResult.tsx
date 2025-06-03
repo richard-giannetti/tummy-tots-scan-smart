@@ -1,12 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Share, ChevronDown, ChevronUp, AlertTriangle, CheckCircle, Info } from 'lucide-react';
+import { ArrowLeft, Share, ChevronDown, ChevronUp, AlertTriangle, CheckCircle, Info, Star } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScanService, ScanResult } from '@/services/scanService';
 import { useScanTracking } from '@/hooks/useScanTracking';
+import { ShareModal } from '@/components/ShareModal';
+import { ReviewsModal } from '@/components/ReviewsModal';
 import { ROUTES } from '@/constants/app';
 
 const ScanResultScreen = () => {
@@ -16,6 +18,8 @@ const ScanResultScreen = () => {
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [reviewsModalOpen, setReviewsModalOpen] = useState(false);
 
   useEffect(() => {
     // Get scan result from location state or generate mock result
@@ -34,13 +38,11 @@ const ScanResultScreen = () => {
   };
 
   const handleShare = () => {
-    if (navigator.share && scanResult) {
-      navigator.share({
-        title: `Healthy Tummies Scan: ${scanResult.product.productName}`,
-        text: `Score: ${scanResult.healthyTummiesScore}/100`,
-        url: window.location.href,
-      });
-    }
+    setShareModalOpen(true);
+  };
+
+  const handleReviewsClick = () => {
+    setReviewsModalOpen(true);
   };
 
   const toggleSection = (section: string) => {
@@ -87,7 +89,7 @@ const ScanResultScreen = () => {
       {/* Header with Product Image */}
       <div className="relative">
         <img 
-          src={scanResult.product.imageUrl} 
+          src="https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=800&h=600&fit=crop"
           alt={scanResult.product.productName}
           className="w-full h-64 object-cover"
           onError={(e) => {
@@ -140,6 +142,26 @@ const ScanResultScreen = () => {
             <p className="text-gray-600 mb-4">
               {getScoreMessage(scanResult.healthyTummiesScore, scanResult.product.productName)}
             </p>
+            
+            {/* Social Proofing Badge */}
+            <div className="flex justify-center mb-4">
+              <Badge 
+                variant="outline" 
+                className="cursor-pointer hover:bg-gray-50 transition-colors px-3 py-2"
+                onClick={handleReviewsClick}
+              >
+                <div className="flex items-center space-x-2">
+                  <div className="flex">
+                    {[1, 2, 3, 4].map((star) => (
+                      <Star key={star} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                    ))}
+                    <Star className="w-3 h-3 text-gray-300" />
+                  </div>
+                  <span className="text-sm">150 other parents have scanned this item</span>
+                </div>
+              </Badge>
+            </div>
+
             {!scanResult.ageAppropriate && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
                 <div className="flex items-center text-red-700">
@@ -397,6 +419,20 @@ const ScanResultScreen = () => {
           </Collapsible>
         </div>
       </div>
+
+      {/* Modals */}
+      <ShareModal 
+        open={shareModalOpen} 
+        onOpenChange={setShareModalOpen}
+        productName={scanResult.product.productName}
+        shareUrl={window.location.href}
+      />
+      
+      <ReviewsModal 
+        open={reviewsModalOpen} 
+        onOpenChange={setReviewsModalOpen}
+        productName={scanResult.product.productName}
+      />
     </div>
   );
 };
