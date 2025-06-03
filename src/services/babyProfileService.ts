@@ -8,6 +8,7 @@ export interface BabyProfile {
   birth_date: string;
   allergies: string[];
   dietary_restrictions: string[];
+  avatar_url?: string;
   created_at?: string;
 }
 
