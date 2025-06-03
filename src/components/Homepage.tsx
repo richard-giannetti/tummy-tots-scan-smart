@@ -8,6 +8,7 @@ import { RecipeRecommendations } from './RecipeRecommendations';
 import { HeaderMenu } from './HeaderMenu';
 import { BabyProfileService, BabyProfile } from '@/services/babyProfileService';
 import { toast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 export const Homepage = () => {
   const [language, setLanguage] = useState('en');
@@ -15,6 +16,7 @@ export const Homepage = () => {
   const [babyProfile, setBabyProfile] = useState<BabyProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const { signOut, user } = useAuth();
+  const navigate = useNavigate();
 
   // Load baby profile on component mount
   useEffect(() => {
@@ -88,6 +90,11 @@ export const Homepage = () => {
     await signOut();
   };
 
+  const handleScanClick = () => {
+    console.log('Navigating to scan screen');
+    navigate('/scan');
+  };
+
   if (profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50">
@@ -102,7 +109,7 @@ export const Homepage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 pb-20">
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
@@ -178,29 +185,37 @@ export const Homepage = () => {
         </div>
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className="bg-white border-t border-gray-200">
+      {/* Bottom Navigation - Fixed and Sticky */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-10">
         <div className="max-w-md mx-auto px-4 py-2">
-          <div className="flex justify-around">
+          <div className="flex justify-around items-center">
             <button className="flex flex-col items-center py-2 px-3 text-pink-500">
               <div className="w-6 h-6 mb-1">🏠</div>
               <span className="text-xs font-medium">Home</span>
             </button>
             <button className="flex flex-col items-center py-2 px-3 text-gray-400">
-              <Camera className="w-6 h-6 mb-1" />
-              <span className="text-xs">Scan</span>
-            </button>
-            <button className="flex flex-col items-center py-2 px-3 text-gray-400">
               <Clock className="w-6 h-6 mb-1" />
               <span className="text-xs">History</span>
             </button>
+            
+            {/* Enhanced Scan Button in the Middle */}
+            <button
+              onClick={handleScanClick}
+              className="relative flex flex-col items-center py-2 px-3 -mt-2"
+            >
+              <div className="w-14 h-14 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center shadow-lg">
+                <Camera className="w-8 h-8 text-white" />
+              </div>
+              <span className="text-xs font-medium text-pink-600 mt-1">Scan</span>
+            </button>
+            
             <button className="flex flex-col items-center py-2 px-3 text-gray-400">
               <BookOpen className="w-6 h-6 mb-1" />
               <span className="text-xs">Recipes</span>
             </button>
             <button className="flex flex-col items-center py-2 px-3 text-gray-400">
               <Settings className="w-6 h-6 mb-1" />
-              <span className="text-xs">Profile</span>
+              <span className="text-xs">Settings</span>
             </button>
           </div>
         </div>
