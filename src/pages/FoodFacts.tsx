@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Search, Filter, CheckCircle, Circle, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -29,7 +30,7 @@ const FoodFacts = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [searchLoading, setSearchLoading] = useState(false);
   
-  const itemsPerPage = 25;
+  const itemsPerPage = 10; // Changed from 25 to 10
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
   useEffect(() => {
@@ -314,25 +315,25 @@ const FoodFacts = () => {
           )}
         </div>
 
-        {/* Foods Grid */}
+        {/* Foods Grid - Made more compact */}
         {searchLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-pink-500" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-8">
             {foods.map((food) => (
               <div
                 key={food._id}
                 onClick={() => handleFoodClick(food)}
-                className={`bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer ${
+                className={`bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-pointer ${
                   bulkMode && selectedFoods.includes(food._id) 
                     ? 'ring-2 ring-blue-500 bg-blue-50' 
                     : ''
                 }`}
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="w-12 h-12 bg-gradient-to-r from-green-200 to-emerald-200 rounded-lg flex items-center justify-center overflow-hidden">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="w-10 h-10 bg-gradient-to-r from-green-200 to-emerald-200 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                     {food.Image ? (
                       <img 
                         src={food.Image} 
@@ -345,16 +346,16 @@ const FoodFacts = () => {
                         }}
                       />
                     ) : (
-                      <span className="text-2xl">🍎</span>
+                      <span className="text-lg">🍎</span>
                     )}
-                    <span className="text-2xl hidden">🍎</span>
+                    <span className="text-lg hidden">🍎</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center">
                     {bulkMode ? (
                       selectedFoods.includes(food._id) ? (
-                        <CheckCircle className="w-5 h-5 text-blue-500" />
+                        <CheckCircle className="w-4 h-4 text-blue-500" />
                       ) : (
-                        <Circle className="w-5 h-5 text-gray-400" />
+                        <Circle className="w-4 h-4 text-gray-400" />
                       )
                     ) : (
                       <button
@@ -365,33 +366,33 @@ const FoodFacts = () => {
                         className="p-1 hover:bg-gray-100 rounded-full transition-colors"
                       >
                         {food.introduced ? (
-                          <CheckCircle className="w-5 h-5 text-green-500" />
+                          <CheckCircle className="w-4 h-4 text-green-500" />
                         ) : (
-                          <Circle className="w-5 h-5 text-gray-400" />
+                          <Circle className="w-4 h-4 text-gray-400" />
                         )}
                       </button>
                     )}
                   </div>
                 </div>
                 
-                <h3 className="font-semibold text-gray-800 mb-1">
+                <h3 className="font-semibold text-gray-800 mb-1 text-sm leading-tight">
                   {food.name || 'Unknown Food'}
                 </h3>
                 
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-1 mb-2 flex-wrap">
                   {food.foodType && (
-                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
                       {food.foodType}
                     </span>
                   )}
                   {food.introduced && (
-                    <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full">
+                    <span className="text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded-full">
                       Introduced
                     </span>
                   )}
                 </div>
                 
-                <p className="text-sm text-gray-600 line-clamp-2">
+                <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
                   {food.ageSuggestion || food.introductionSummary || 'Tap to learn more about this food'}
                 </p>
               </div>
