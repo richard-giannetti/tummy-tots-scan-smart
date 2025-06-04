@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { BabyProfileService, BabyProfile } from '@/services/babyProfileService';
@@ -8,6 +7,7 @@ import { RecentScans } from './RecentScans';
 import { RecipeRecommendations } from './RecipeRecommendations';
 import { FoodFacts } from './FoodFacts';
 import { HeaderMenu } from './HeaderMenu';
+import { BottomNavigation } from './BottomNavigation';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -127,9 +127,16 @@ export const Homepage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
-      <div className="flex justify-end p-4">
-        <HeaderMenu 
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 pb-20">
+      {/* Header with app title and menu */}
+      <div className="flex items-center justify-between p-4 bg-white/80 backdrop-blur-sm shadow-sm">
+        <div className="flex items-center">
+          <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center mr-3">
+            <span className="text-white font-bold text-sm">HT</span>
+          </div>
+          <h1 className="text-xl font-bold text-gray-800">Healthy Tummies</h1>
+        </div>
+        <HeaderMenu
           language={language}
           onToggleLanguage={handleToggleLanguage}
           onSignOut={handleSignOut}
@@ -156,6 +163,9 @@ export const Homepage = () => {
         {/* Recipe Recommendations Section */}
         <RecipeRecommendations babyName={babyProfile?.name} />
       </div>
+
+      {/* Bottom Navigation */}
+      <BottomNavigation currentRoute="/" />
     </div>
   );
 };
