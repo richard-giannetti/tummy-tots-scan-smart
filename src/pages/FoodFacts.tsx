@@ -148,7 +148,7 @@ const FoodFacts = () => {
         });
         setSelectedFoods([]);
         setBulkMode(false);
-        await fetchData(); // Refresh data
+        await fetchFoods(); // Fixed: changed from fetchData to fetchFoods
       } else {
         toast({
           title: "Error",
@@ -199,7 +199,7 @@ const FoodFacts = () => {
           });
         }
       }
-      await fetchData(); // Refresh data
+      await fetchFoods(); // Fixed: changed from fetchData to fetchFoods
     } catch (error) {
       console.error('Error toggling food introduction status:', error);
       toast({
