@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface IntroducedFood {
@@ -278,10 +277,12 @@ export class IntroducedFoodsService {
         sampleData: starTest?.slice(0, 1)
       });
 
-      // Test 3: Check if RLS is blocking
-      console.log('TEST 3: Checking RLS policies...');
-      const { data: rpcTest, error: rpcError } = await supabase.rpc('get_foods_count');
-      console.log('RPC test (if function exists):', { data: rpcTest, error: rpcError });
+      // Test 3: Check table permissions by trying a simple count
+      console.log('TEST 3: Checking table permissions...');
+      const { count: permissionCount, error: permissionError } = await supabase
+        .from('foods')
+        .select('*', { count: 'exact', head: true });
+      console.log('Permission test:', { count: permissionCount, error: permissionError });
 
       // Use the basic test result if it worked
       if (basicError) {
