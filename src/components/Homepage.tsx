@@ -9,12 +9,15 @@ import { RecipeRecommendations } from './RecipeRecommendations';
 import { FoodFacts } from './FoodFacts';
 import { HeaderMenu } from './HeaderMenu';
 import { toast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 export const Homepage = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [babyProfile, setBabyProfile] = useState<BabyProfile | null>(null);
   const [hasProfile, setHasProfile] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [language, setLanguage] = useState('en');
 
   useEffect(() => {
     if (user) {
@@ -84,6 +87,32 @@ export const Homepage = () => {
     }
   };
 
+  const handleToggleLanguage = () => {
+    setLanguage(prev => prev === 'en' ? 'es' : 'en');
+    toast({
+      title: "Language changed",
+      description: `Switched to ${language === 'en' ? 'Spanish' : 'English'}`,
+    });
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/auth');
+      toast({
+        title: "Signed out",
+        description: "You have been signed out successfully.",
+      });
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
@@ -99,7 +128,13 @@ export const Homepage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
-      <HeaderMenu />
+      <div className="flex justify-end p-4">
+        <HeaderMenu 
+          language={language}
+          onToggleLanguage={handleToggleLanguage}
+          onSignOut={handleSignOut}
+        />
+      </div>
       
       <div className="container mx-auto px-4 py-6 space-y-6 max-w-4xl">
         {/* Baby Profile Section */}
