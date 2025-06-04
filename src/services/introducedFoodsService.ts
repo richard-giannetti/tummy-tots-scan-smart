@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface IntroducedFood {
@@ -238,16 +239,42 @@ export class IntroducedFoodsService {
     try {
       console.log('Fetching paginated foods for baby:', babyProfileId, 'page:', page, 'limit:', limit);
       
+      // Check authentication first
       const { data: { user }, error: userError } = await supabase.auth.getUser();
+      console.log('Current user:', user?.id);
       
       if (userError || !user) {
-        console.error('No authenticated user found');
+        console.error('No authenticated user found:', userError);
         return { success: false, error: 'No authenticated user found' };
       }
 
       const offset = (page - 1) * limit;
 
-      // Build query for foods
+      // First, let's test if we can access the foods table at all
+      console.log('Testing basic access to foods table...');
+      const { data: testFoods, error: testError, count: testCount } = await supabase
+        .from('foods')
+        .select('_id, name', { count: 'exact' })
+        .limit(5);
+
+      console.log('Test query result:', {
+        count: testCount,
+        dataLength: testFoods?.length,
+        error: testError,
+        sampleData: testFoods?.slice(0, 2)
+      });
+
+      if (testError) {
+        console.error('Error accessing foods table:', testError);
+        return { success: false, error: `Cannot access foods table: ${testError.message}` };
+      }
+
+      if (!testFoods || testFoods.length === 0) {
+        console.log('Foods table appears to be empty');
+        return { success: true, data: [], totalCount: 0 };
+      }
+
+      // Build query for foods with proper pagination
       let foodsQuery = supabase
         .from('foods')
         .select('*', { count: 'exact' })
@@ -255,6 +282,7 @@ export class IntroducedFoodsService {
 
       // Add search filter if provided
       if (searchTerm) {
+        console.log('Applying search term:', searchTerm);
         foodsQuery = foodsQuery.or(`name.ilike.%${searchTerm}%,foodType.ilike.%${searchTerm}%`);
       }
 
@@ -262,6 +290,14 @@ export class IntroducedFoodsService {
       foodsQuery = foodsQuery.range(offset, offset + limit - 1);
 
       const { data: foods, error: foodsError, count } = await foodsQuery;
+
+      console.log('Main query result:', {
+        count,
+        dataLength: foods?.length,
+        error: foodsError,
+        offset,
+        limit
+      });
 
       if (foodsError) {
         console.error('Error fetching foods:', foodsError);
@@ -279,6 +315,8 @@ export class IntroducedFoodsService {
         console.error('Error fetching introduced foods:', introducedError);
         return { success: false, error: introducedError.message };
       }
+
+      console.log('Introduced foods count:', introducedFoods?.length || 0);
 
       // Create a map for quick lookup
       const introducedMap = new Map(
@@ -299,7 +337,9 @@ export class IntroducedFoodsService {
         foodsWithIntroduction = foodsWithIntroduction.filter(food => !food.introduced);
       }
 
-      console.log('Paginated foods fetched successfully:', foodsWithIntroduction.length);
+      console.log('Final result - foods with introduction status:', foodsWithIntroduction.length);
+      console.log('Sample foods:', foodsWithIntroduction.slice(0, 3).map(f => ({ id: f._id, name: f.name })));
+      
       return { 
         success: true, 
         data: foodsWithIntroduction,
