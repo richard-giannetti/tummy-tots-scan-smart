@@ -237,6 +237,7 @@ export class IntroducedFoodsService {
     filterType?: 'all' | 'introduced' | 'not-introduced'
   ): Promise<PaginatedFoodsResponse> {
     try {
+      console.log('=== DEBUGGING FOODS ACCESS ===');
       console.log('Fetching paginated foods for baby:', babyProfileId, 'page:', page, 'limit:', limit);
       
       // Check authentication first
@@ -250,29 +251,71 @@ export class IntroducedFoodsService {
 
       const offset = (page - 1) * limit;
 
-      // First, let's test if we can access the foods table at all
-      console.log('Testing basic access to foods table...');
-      const { data: testFoods, error: testError, count: testCount } = await supabase
+      // Test 1: Basic table access without any filters
+      console.log('TEST 1: Basic access to foods table...');
+      const { data: basicTest, error: basicError, count: basicCount } = await supabase
         .from('foods')
         .select('_id, name', { count: 'exact' })
         .limit(5);
 
-      console.log('Test query result:', {
-        count: testCount,
-        dataLength: testFoods?.length,
-        error: testError,
-        sampleData: testFoods?.slice(0, 2)
+      console.log('Basic test result:', {
+        count: basicCount,
+        dataLength: basicTest?.length,
+        error: basicError,
+        sampleData: basicTest?.slice(0, 2)
       });
 
-      if (testError) {
-        console.error('Error accessing foods table:', testError);
-        return { success: false, error: `Cannot access foods table: ${testError.message}` };
+      // Test 2: Try with different select patterns
+      console.log('TEST 2: Testing with * select...');
+      const { data: starTest, error: starError } = await supabase
+        .from('foods')
+        .select('*')
+        .limit(3);
+
+      console.log('Star select test:', {
+        dataLength: starTest?.length,
+        error: starError,
+        sampleData: starTest?.slice(0, 1)
+      });
+
+      // Test 3: Check if RLS is blocking
+      console.log('TEST 3: Checking RLS policies...');
+      const { data: rpcTest, error: rpcError } = await supabase.rpc('get_foods_count');
+      console.log('RPC test (if function exists):', { data: rpcTest, error: rpcError });
+
+      // Use the basic test result if it worked
+      if (basicError) {
+        console.error('Error accessing foods table:', basicError);
+        return { success: false, error: `Cannot access foods table: ${basicError.message}` };
       }
 
-      if (!testFoods || testFoods.length === 0) {
-        console.log('Foods table appears to be empty');
-        return { success: true, data: [], totalCount: 0 };
+      if (!basicTest || basicTest.length === 0) {
+        console.log('Foods table appears to be empty or inaccessible');
+        console.log('Trying alternative approach...');
+        
+        // Test 4: Try without count to see if that's the issue
+        const { data: noCountTest, error: noCountError } = await supabase
+          .from('foods')
+          .select('_id, name')
+          .limit(10);
+          
+        console.log('No count test:', {
+          dataLength: noCountTest?.length,
+          error: noCountError,
+          data: noCountTest
+        });
+        
+        if (noCountError) {
+          return { success: false, error: `Foods table access failed: ${noCountError.message}` };
+        }
+        
+        if (!noCountTest || noCountTest.length === 0) {
+          return { success: true, data: [], totalCount: 0 };
+        }
       }
+
+      // If we get here, we have access - proceed with the full query
+      console.log('SUCCESS: Table is accessible, proceeding with full query...');
 
       // Build query for foods with proper pagination
       let foodsQuery = supabase
@@ -339,6 +382,7 @@ export class IntroducedFoodsService {
 
       console.log('Final result - foods with introduction status:', foodsWithIntroduction.length);
       console.log('Sample foods:', foodsWithIntroduction.slice(0, 3).map(f => ({ id: f._id, name: f.name })));
+      console.log('=== END DEBUGGING ===');
       
       return { 
         success: true, 
