@@ -12,6 +12,7 @@ export type Database = {
       baby_profiles: {
         Row: {
           allergies: string[] | null
+          avatar_url: string | null
           birth_date: string
           created_at: string | null
           dietary_restrictions: string[] | null
@@ -21,6 +22,7 @@ export type Database = {
         }
         Insert: {
           allergies?: string[] | null
+          avatar_url?: string | null
           birth_date: string
           created_at?: string | null
           dietary_restrictions?: string[] | null
@@ -30,6 +32,7 @@ export type Database = {
         }
         Update: {
           allergies?: string[] | null
+          avatar_url?: string | null
           birth_date?: string
           created_at?: string | null
           dietary_restrictions?: string[] | null
@@ -44,6 +47,105 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      foods: {
+        Row: {
+          _id: string
+          ageSuggestion: string | null
+          allergenInfo: string | null
+          canBabiesDrinkMilk: string | null
+          chokingHazardInfo: string | null
+          commonAllergen: string | null
+          foodType: string | null
+          healthBenefits: string | null
+          Image: string | null
+          introductionSummary: string | null
+          ironRich: string | null
+          name: string | null
+          servingSuggestion12Months: string | null
+          servingSuggestion3Years: string | null
+          servingSuggestion6Months: string | null
+        }
+        Insert: {
+          _id: string
+          ageSuggestion?: string | null
+          allergenInfo?: string | null
+          canBabiesDrinkMilk?: string | null
+          chokingHazardInfo?: string | null
+          commonAllergen?: string | null
+          foodType?: string | null
+          healthBenefits?: string | null
+          Image?: string | null
+          introductionSummary?: string | null
+          ironRich?: string | null
+          name?: string | null
+          servingSuggestion12Months?: string | null
+          servingSuggestion3Years?: string | null
+          servingSuggestion6Months?: string | null
+        }
+        Update: {
+          _id?: string
+          ageSuggestion?: string | null
+          allergenInfo?: string | null
+          canBabiesDrinkMilk?: string | null
+          chokingHazardInfo?: string | null
+          commonAllergen?: string | null
+          foodType?: string | null
+          healthBenefits?: string | null
+          Image?: string | null
+          introductionSummary?: string | null
+          ironRich?: string | null
+          name?: string | null
+          servingSuggestion12Months?: string | null
+          servingSuggestion3Years?: string | null
+          servingSuggestion6Months?: string | null
+        }
+        Relationships: []
+      }
+      introduced_foods: {
+        Row: {
+          baby_profile_id: string
+          created_at: string
+          food_id: string
+          id: string
+          introduced_date: string
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          baby_profile_id: string
+          created_at?: string
+          food_id: string
+          id?: string
+          introduced_date?: string
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          baby_profile_id?: string
+          created_at?: string
+          food_id?: string
+          id?: string
+          introduced_date?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "introduced_foods_baby_profile_id_fkey"
+            columns: ["baby_profile_id"]
+            isOneToOne: false
+            referencedRelation: "baby_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "introduced_foods_food_id_fkey"
+            columns: ["food_id"]
+            isOneToOne: false
+            referencedRelation: "foods"
+            referencedColumns: ["_id"]
           },
         ]
       }

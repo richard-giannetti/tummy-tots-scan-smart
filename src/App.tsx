@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import ScanScreen from "./pages/ScanScreen";
 import SearchScreen from "./pages/SearchScreen";
 import ScanResult from "./pages/ScanResult";
+import FoodFacts from "./pages/FoodFacts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/scan" element={<ScanScreen />} />
             <Route path="/search" element={<SearchScreen />} />
             <Route path="/scan-result" element={<ScanResult />} />
+            <Route path="/food-facts" element={<FoodFacts />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
