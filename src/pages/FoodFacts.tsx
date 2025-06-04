@@ -1,16 +1,23 @@
-
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Search, Filter, CheckCircle, Circle, Loader2 } from 'lucide-react';
+import { ArrowLeft, Search, Filter, CheckCircle, Circle, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { IntroducedFoodsService, FoodWithIntroduction } from '@/services/introducedFoodsService';
 import { BabyProfileService, BabyProfile } from '@/services/babyProfileService';
 import { FoodDetailModal } from '@/components/FoodDetailModal';
+import { BottomNavigation } from '@/components/BottomNavigation';
 import { toast } from '@/hooks/use-toast';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 const FoodFacts = () => {
   const navigate = useNavigate();
   const [foods, setFoods] = useState<FoodWithIntroduction[]>([]);
-  const [filteredFoods, setFilteredFoods] = useState<FoodWithIntroduction[]>([]);
   const [babyProfile, setBabyProfile] = useState<BabyProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,35 +25,28 @@ const FoodFacts = () => {
   const [selectedFoods, setSelectedFoods] = useState<string[]>([]);
   const [bulkMode, setBulkMode] = useState(false);
   const [selectedFood, setSelectedFood] = useState<FoodWithIntroduction | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [searchLoading, setSearchLoading] = useState(false);
+  
+  const itemsPerPage = 25;
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
 
   useEffect(() => {
-    fetchData();
+    fetchBabyProfile();
   }, []);
 
   useEffect(() => {
-    filterFoods();
-  }, [foods, searchTerm, filterType]);
+    if (babyProfile) {
+      fetchFoods();
+    }
+  }, [babyProfile, currentPage, searchTerm, filterType]);
 
-  const fetchData = async () => {
+  const fetchBabyProfile = async () => {
     try {
-      setLoading(true);
-      
-      // Get baby profile
       const profileResult = await BabyProfileService.getBabyProfile();
       if (profileResult.success && profileResult.profile) {
         setBabyProfile(profileResult.profile);
-        
-        // Get foods with introduction status
-        const foodsResult = await IntroducedFoodsService.getAllFoodsWithIntroduction(profileResult.profile.id!);
-        if (foodsResult.success && foodsResult.data) {
-          setFoods(foodsResult.data);
-        } else {
-          toast({
-            title: "Error",
-            description: foodsResult.error || "Failed to load foods",
-            variant: "destructive",
-          });
-        }
       } else {
         toast({
           title: "Error",
@@ -56,7 +56,43 @@ const FoodFacts = () => {
         navigate('/');
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load baby profile",
+        variant: "destructive",
+      });
+      navigate('/');
+    }
+  };
+
+  const fetchFoods = async () => {
+    if (!babyProfile) return;
+
+    try {
+      setSearchLoading(true);
+      
+      const result = await IntroducedFoodsService.getPaginatedFoodsWithIntroduction(
+        babyProfile.id!,
+        currentPage,
+        itemsPerPage,
+        searchTerm || undefined,
+        filterType
+      );
+
+      if (result.success && result.data) {
+        setFoods(result.data);
+        setTotalCount(result.totalCount || 0);
+      } else {
+        console.error('Error fetching foods:', result.error);
+        toast({
+          title: "Error",
+          description: result.error || "Failed to load foods",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching foods:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred",
@@ -64,28 +100,23 @@ const FoodFacts = () => {
       });
     } finally {
       setLoading(false);
+      setSearchLoading(false);
     }
   };
 
-  const filterFoods = () => {
-    let filtered = foods;
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
 
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(food => 
-        food.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        food.foodType?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+  const handleFilterChange = (value: 'all' | 'introduced' | 'not-introduced') => {
+    setFilterType(value);
+    setCurrentPage(1); // Reset to first page when filtering
+  };
 
-    // Introduction status filter
-    if (filterType === 'introduced') {
-      filtered = filtered.filter(food => food.introduced);
-    } else if (filterType === 'not-introduced') {
-      filtered = filtered.filter(food => !food.introduced);
-    }
-
-    setFilteredFoods(filtered);
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleFoodClick = (food: FoodWithIntroduction) => {
@@ -191,7 +222,7 @@ const FoodFacts = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 pb-20">
       <div className="container mx-auto px-4 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -245,7 +276,7 @@ const FoodFacts = () => {
                 type="text"
                 placeholder="Search foods..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
               />
             </div>
@@ -253,7 +284,7 @@ const FoodFacts = () => {
               <Filter className="w-5 h-5 text-gray-500" />
               <select
                 value={filterType}
-                onChange={(e) => setFilterType(e.target.value as any)}
+                onChange={(e) => handleFilterChange(e.target.value as any)}
                 className="px-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
               >
                 <option value="all">All Foods</option>
@@ -267,7 +298,14 @@ const FoodFacts = () => {
         {/* Results Stats */}
         <div className="mb-4 flex items-center justify-between">
           <p className="text-sm text-gray-600">
-            Showing {filteredFoods.length} of {foods.length} foods
+            {searchLoading ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Searching...
+              </span>
+            ) : (
+              `Showing ${foods.length} of ${totalCount} foods (page ${currentPage} of ${totalPages})`
+            )}
           </p>
           {bulkMode && selectedFoods.length > 0 && (
             <p className="text-sm text-blue-600 font-medium">
@@ -277,91 +315,153 @@ const FoodFacts = () => {
         </div>
 
         {/* Foods Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredFoods.map((food) => (
-            <div
-              key={food._id}
-              onClick={() => handleFoodClick(food)}
-              className={`bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer ${
-                bulkMode && selectedFoods.includes(food._id) 
-                  ? 'ring-2 ring-blue-500 bg-blue-50' 
-                  : ''
-              }`}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="w-12 h-12 bg-gradient-to-r from-green-200 to-emerald-200 rounded-lg flex items-center justify-center overflow-hidden">
-                  {food.Image ? (
-                    <img 
-                      src={food.Image} 
-                      alt={food.name || 'Food'} 
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        target.nextElementSibling?.classList.remove('hidden');
-                      }}
-                    />
-                  ) : (
-                    <span className="text-2xl">🍎</span>
-                  )}
-                  <span className="text-2xl hidden">🍎</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {bulkMode ? (
-                    selectedFoods.includes(food._id) ? (
-                      <CheckCircle className="w-5 h-5 text-blue-500" />
+        {searchLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-pink-500" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            {foods.map((food) => (
+              <div
+                key={food._id}
+                onClick={() => handleFoodClick(food)}
+                className={`bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer ${
+                  bulkMode && selectedFoods.includes(food._id) 
+                    ? 'ring-2 ring-blue-500 bg-blue-50' 
+                    : ''
+                }`}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="w-12 h-12 bg-gradient-to-r from-green-200 to-emerald-200 rounded-lg flex items-center justify-center overflow-hidden">
+                    {food.Image ? (
+                      <img 
+                        src={food.Image} 
+                        alt={food.name || 'Food'} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          target.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
                     ) : (
-                      <Circle className="w-5 h-5 text-gray-400" />
-                    )
-                  ) : (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleToggleIntroduced(food);
-                      }}
-                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                    >
-                      {food.introduced ? (
-                        <CheckCircle className="w-5 h-5 text-green-500" />
+                      <span className="text-2xl">🍎</span>
+                    )}
+                    <span className="text-2xl hidden">🍎</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {bulkMode ? (
+                      selectedFoods.includes(food._id) ? (
+                        <CheckCircle className="w-5 h-5 text-blue-500" />
                       ) : (
                         <Circle className="w-5 h-5 text-gray-400" />
-                      )}
-                    </button>
+                      )
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleIntroduced(food);
+                        }}
+                        className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                      >
+                        {food.introduced ? (
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                        ) : (
+                          <Circle className="w-5 h-5 text-gray-400" />
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
+                
+                <h3 className="font-semibold text-gray-800 mb-1">
+                  {food.name || 'Unknown Food'}
+                </h3>
+                
+                <div className="flex items-center gap-2 mb-2">
+                  {food.foodType && (
+                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                      {food.foodType}
+                    </span>
+                  )}
+                  {food.introduced && (
+                    <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full">
+                      Introduced
+                    </span>
                   )}
                 </div>
+                
+                <p className="text-sm text-gray-600 line-clamp-2">
+                  {food.ageSuggestion || food.introductionSummary || 'Tap to learn more about this food'}
+                </p>
               </div>
-              
-              <h3 className="font-semibold text-gray-800 mb-1">
-                {food.name || 'Unknown Food'}
-              </h3>
-              
-              <div className="flex items-center gap-2 mb-2">
-                {food.foodType && (
-                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                    {food.foodType}
-                  </span>
-                )}
-                {food.introduced && (
-                  <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full">
-                    Introduced
-                  </span>
-                )}
-              </div>
-              
-              <p className="text-sm text-gray-600 line-clamp-2">
-                {food.ageSuggestion || food.introductionSummary || 'Tap to learn more about this food'}
-              </p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
-        {filteredFoods.length === 0 && (
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+                    className={currentPage <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+                
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <PaginationItem key={pageNum}>
+                      <PaginationLink
+                        onClick={() => handlePageChange(pageNum)}
+                        isActive={currentPage === pageNum}
+                        className="cursor-pointer"
+                      >
+                        {pageNum}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+                
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+                    className={currentPage >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
+
+        {foods.length === 0 && !searchLoading && (
           <div className="text-center py-12">
             <p className="text-gray-500 mb-2">No foods found</p>
-            <p className="text-sm text-gray-400">Try adjusting your search or filter criteria</p>
+            <p className="text-sm text-gray-400">
+              {searchTerm || filterType !== 'all' 
+                ? 'Try adjusting your search or filter criteria'
+                : 'No foods available in the database'
+              }
+            </p>
           </div>
         )}
       </div>
+
+      {/* Bottom Navigation */}
+      <BottomNavigation currentRoute="/food-facts" />
 
       {/* Food Detail Modal */}
       {selectedFood && (

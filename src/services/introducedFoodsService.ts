@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface IntroducedFood {
@@ -34,6 +33,13 @@ export interface FoodWithIntroduction {
   servingSuggestion3Years: string;
   introduced?: boolean;
   introduced_date?: string;
+}
+
+export interface PaginatedFoodsResponse {
+  success: boolean;
+  data?: FoodWithIntroduction[];
+  totalCount?: number;
+  error?: string;
 }
 
 export class IntroducedFoodsService {
@@ -218,6 +224,89 @@ export class IntroducedFoodsService {
       return { success: true, data: foodsWithIntroduction };
     } catch (error: any) {
       console.error('Unexpected error fetching foods with introduction status:', error);
+      return { success: false, error: error.message || 'An unexpected error occurred' };
+    }
+  }
+
+  static async getPaginatedFoodsWithIntroduction(
+    babyProfileId: string, 
+    page: number = 1, 
+    limit: number = 25,
+    searchTerm?: string,
+    filterType?: 'all' | 'introduced' | 'not-introduced'
+  ): Promise<PaginatedFoodsResponse> {
+    try {
+      console.log('Fetching paginated foods for baby:', babyProfileId, 'page:', page, 'limit:', limit);
+      
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        console.error('No authenticated user found');
+        return { success: false, error: 'No authenticated user found' };
+      }
+
+      const offset = (page - 1) * limit;
+
+      // Build query for foods
+      let foodsQuery = supabase
+        .from('foods')
+        .select('*', { count: 'exact' })
+        .order('name');
+
+      // Add search filter if provided
+      if (searchTerm) {
+        foodsQuery = foodsQuery.or(`name.ilike.%${searchTerm}%,foodType.ilike.%${searchTerm}%`);
+      }
+
+      // Apply pagination
+      foodsQuery = foodsQuery.range(offset, offset + limit - 1);
+
+      const { data: foods, error: foodsError, count } = await foodsQuery;
+
+      if (foodsError) {
+        console.error('Error fetching foods:', foodsError);
+        return { success: false, error: foodsError.message };
+      }
+
+      // Get introduced foods for this baby
+      const { data: introducedFoods, error: introducedError } = await supabase
+        .from('introduced_foods')
+        .select('food_id, introduced_date')
+        .eq('baby_profile_id', babyProfileId)
+        .eq('user_id', user.id);
+
+      if (introducedError) {
+        console.error('Error fetching introduced foods:', introducedError);
+        return { success: false, error: introducedError.message };
+      }
+
+      // Create a map for quick lookup
+      const introducedMap = new Map(
+        introducedFoods?.map(item => [item.food_id, item.introduced_date]) || []
+      );
+
+      // Combine the data
+      let foodsWithIntroduction: FoodWithIntroduction[] = foods?.map(food => ({
+        ...food,
+        introduced: introducedMap.has(food._id),
+        introduced_date: introducedMap.get(food._id)
+      })) || [];
+
+      // Apply introduction status filter if provided
+      if (filterType === 'introduced') {
+        foodsWithIntroduction = foodsWithIntroduction.filter(food => food.introduced);
+      } else if (filterType === 'not-introduced') {
+        foodsWithIntroduction = foodsWithIntroduction.filter(food => !food.introduced);
+      }
+
+      console.log('Paginated foods fetched successfully:', foodsWithIntroduction.length);
+      return { 
+        success: true, 
+        data: foodsWithIntroduction,
+        totalCount: count || 0
+      };
+    } catch (error: any) {
+      console.error('Unexpected error fetching paginated foods:', error);
       return { success: false, error: error.message || 'An unexpected error occurred' };
     }
   }
