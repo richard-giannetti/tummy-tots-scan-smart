@@ -25,7 +25,6 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
       
       if (result.success && result.recipes) {
         setRecipes(result.recipes);
-        // Set tried count to 0 initially
         setTriedCount(0);
       }
     } catch (error) {
@@ -65,17 +64,17 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
   }
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm">
+    <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold text-gray-800 flex items-center">
-          <ChefHat className="w-5 h-5 mr-2 text-orange-500" />
-          Recipes for {babyName || 'Baby'}
+          <ChefHat className="w-5 h-5 mr-2 text-orange-500 flex-shrink-0" />
+          <span className="truncate">Recipes for {babyName || 'Baby'}</span>
         </h3>
         <button 
           onClick={handleViewAllRecipes}
-          className="text-sm text-pink-500 hover:text-pink-600 font-medium"
+          className="text-sm text-pink-500 hover:text-pink-600 font-medium whitespace-nowrap ml-2"
         >
-          View All Recipes
+          View All
         </button>
       </div>
 
@@ -85,14 +84,14 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
         </p>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-3">
         {recipes.map((recipe) => (
           <div
             key={recipe._id}
-            className="flex items-center space-x-3 p-3 rounded-xl border border-gray-100 hover:border-pink-200 hover:shadow-sm transition-all cursor-pointer group"
+            className="flex items-start space-x-2 sm:space-x-3 p-2 sm:p-3 rounded-xl border border-gray-100 hover:border-pink-200 hover:shadow-sm transition-all cursor-pointer group"
             onClick={() => navigate(`/recipe/${recipe._id}`)}
           >
-            <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
               <img 
                 src={getRecipeImage(recipe)} 
                 alt={recipe.title}
@@ -104,8 +103,10 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
               />
             </div>
             <div className="flex-1 min-w-0 overflow-hidden">
-              <h4 className="font-medium text-gray-800 text-sm mb-1 truncate leading-tight">{recipe.title}</h4>
-              <div className="flex items-center space-x-3 text-xs text-gray-500">
+              <h4 className="font-medium text-gray-800 text-xs sm:text-sm mb-1 leading-tight break-words">
+                {recipe.title}
+              </h4>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 space-y-1 sm:space-y-0 text-xs text-gray-500">
                 <div className="flex items-center space-x-1">
                   <Clock className="w-3 h-3 flex-shrink-0" />
                   <span className="truncate">{recipe.time || 'N/A'}</span>
@@ -116,8 +117,8 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
                 </div>
               </div>
             </div>
-            <div className="flex-shrink-0">
-              <Eye className="w-4 h-4 text-gray-400 group-hover:text-pink-500 transition-colors" />
+            <div className="flex-shrink-0 self-center">
+              <Eye className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 group-hover:text-pink-500 transition-colors" />
             </div>
           </div>
         ))}
