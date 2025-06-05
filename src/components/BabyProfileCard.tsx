@@ -14,7 +14,7 @@ interface BabyProfileCardProps {
 export const BabyProfileCard = ({ hasProfile, babyProfile, onProfileComplete }: BabyProfileCardProps) => {
   const [isEditing, setIsEditing] = useState(!hasProfile);
 
-  const handleSubmit = (profileData: Omit<BabyProfile, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+  const handleSubmit = (profileData: Omit<BabyProfile, 'id' | 'user_id' | 'created_at'>) => {
     // Create a proper BabyProfile object with the existing ID if updating
     const completeProfile: BabyProfile = {
       id: babyProfile?.id,
@@ -46,6 +46,8 @@ export const BabyProfileCard = ({ hasProfile, babyProfile, onProfileComplete }: 
         birth_date: babyProfile.birth_date,
         allergies: babyProfile.allergies,
         dietary_restrictions: babyProfile.dietary_restrictions,
+        feeding_type: babyProfile.feeding_type,
+        medical_conditions: babyProfile.medical_conditions,
         avatar_url: avatarUrl
       };
 

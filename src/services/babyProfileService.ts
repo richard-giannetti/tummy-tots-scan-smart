@@ -8,6 +8,8 @@ export interface BabyProfile {
   birth_date: string;
   allergies: string[];
   dietary_restrictions: string[];
+  feeding_type?: string;
+  medical_conditions?: string[];
   avatar_url?: string;
   created_at?: string;
 }
@@ -83,6 +85,8 @@ export class BabyProfileService {
           birth_date: profileData.birth_date,
           allergies: profileData.allergies,
           dietary_restrictions: profileData.dietary_restrictions,
+          feeding_type: profileData.feeding_type,
+          medical_conditions: profileData.medical_conditions,
           avatar_url: profileData.avatar_url
         })
         .select()

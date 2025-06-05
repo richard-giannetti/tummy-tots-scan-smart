@@ -16,7 +16,9 @@ export type Database = {
           birth_date: string
           created_at: string | null
           dietary_restrictions: string[] | null
+          feeding_type: string | null
           id: string
+          medical_conditions: string[] | null
           name: string
           user_id: string
         }
@@ -26,7 +28,9 @@ export type Database = {
           birth_date: string
           created_at?: string | null
           dietary_restrictions?: string[] | null
+          feeding_type?: string | null
           id?: string
+          medical_conditions?: string[] | null
           name: string
           user_id: string
         }
@@ -36,7 +40,9 @@ export type Database = {
           birth_date?: string
           created_at?: string | null
           dietary_restrictions?: string[] | null
+          feeding_type?: string | null
           id?: string
+          medical_conditions?: string[] | null
           name?: string
           user_id?: string
         }
