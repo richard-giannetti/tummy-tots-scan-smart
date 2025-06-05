@@ -223,6 +223,48 @@ export type Database = {
           },
         ]
       }
+      user_progress: {
+        Row: {
+          achievements: string[]
+          created_at: string
+          current_streak: number
+          feeding_level: string
+          id: string
+          last_activity_date: string
+          level_progress: number
+          longest_streak: number
+          total_points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          achievements?: string[]
+          created_at?: string
+          current_streak?: number
+          feeding_level?: string
+          id?: string
+          last_activity_date?: string
+          level_progress?: number
+          longest_streak?: number
+          total_points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          achievements?: string[]
+          created_at?: string
+          current_streak?: number
+          feeding_level?: string
+          id?: string
+          last_activity_date?: string
+          level_progress?: number
+          longest_streak?: number
+          total_points?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           created_at: string | null
