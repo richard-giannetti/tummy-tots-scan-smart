@@ -89,10 +89,10 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
         {recipes.map((recipe) => (
           <div
             key={recipe._id}
-            className="flex items-center space-x-4 p-3 rounded-xl border border-gray-100 hover:border-pink-200 hover:shadow-sm transition-all cursor-pointer group"
+            className="flex items-center space-x-3 p-3 rounded-xl border border-gray-100 hover:border-pink-200 hover:shadow-sm transition-all cursor-pointer group"
             onClick={() => navigate(`/recipe/${recipe._id}`)}
           >
-            <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
+            <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
               <img 
                 src={getRecipeImage(recipe)} 
                 alt={recipe.title}
@@ -103,16 +103,16 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
                 }}
               />
             </div>
-            <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-gray-800 text-sm mb-2 truncate">{recipe.title}</h4>
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <h4 className="font-medium text-gray-800 text-sm mb-1 truncate leading-tight">{recipe.title}</h4>
               <div className="flex items-center space-x-3 text-xs text-gray-500">
                 <div className="flex items-center space-x-1">
-                  <Clock className="w-3 h-3" />
-                  <span>{recipe.time || 'N/A'}</span>
+                  <Clock className="w-3 h-3 flex-shrink-0" />
+                  <span className="truncate">{recipe.time || 'N/A'}</span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <Users className="w-3 h-3" />
-                  <span>{recipe.servings || 1} serving{(recipe.servings || 1) > 1 ? 's' : ''}</span>
+                  <Users className="w-3 h-3 flex-shrink-0" />
+                  <span className="truncate">{recipe.servings || 1} serving{(recipe.servings || 1) > 1 ? 's' : ''}</span>
                 </div>
               </div>
             </div>
