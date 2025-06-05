@@ -74,20 +74,6 @@ export const FoodFacts = ({ babyName }: FoodFactsProps) => {
           <p className="text-xs text-blue-600">Mark foods as introduced</p>
         </div>
       </div>
-
-      <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl">
-        <p className="text-sm text-gray-700 mb-2">
-          <span className="font-medium">Learn about foods</span> before introducing them to {babyName || 'your baby'}
-        </p>
-        <div className="flex items-center text-xs text-gray-600">
-          <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-          Age-appropriate recommendations
-        </div>
-        <div className="flex items-center text-xs text-gray-600 mt-1">
-          <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-          Safety and allergy information
-        </div>
-      </div>
     </div>
   );
 };
