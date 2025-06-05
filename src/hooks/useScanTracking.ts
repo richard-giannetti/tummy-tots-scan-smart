@@ -2,9 +2,11 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { ScanService } from '@/services/scanService';
+import { useGamification } from '@/hooks/useGamification';
 
 export const useScanTracking = () => {
   const { user } = useAuth();
+  const { awardPoints } = useGamification();
 
   const recordScan = async (score?: number) => {
     if (!user) {
@@ -27,6 +29,9 @@ export const useScanTracking = () => {
       });
       return;
     }
+
+    // Award gamification points for scanning
+    await awardPoints('scan');
 
     console.log('Scan recorded successfully');
   };

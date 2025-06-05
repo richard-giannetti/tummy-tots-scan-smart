@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { BabyProfileService, BabyProfile } from '@/services/babyProfileService';
@@ -8,8 +9,13 @@ import { RecipeRecommendations } from './RecipeRecommendations';
 import { FoodFacts } from './FoodFacts';
 import { HeaderMenu } from './HeaderMenu';
 import { BottomNavigation } from './BottomNavigation';
+import { FeedingJourneyProgress } from './FeedingJourneyProgress';
+import { AchievementNotification } from './AchievementNotification';
+import { AchievementsModal } from './AchievementsModal';
+import { useGamification } from '@/hooks/useGamification';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { Award } from 'lucide-react';
 
 export const Homepage = () => {
   const { user, signOut } = useAuth();
@@ -18,6 +24,16 @@ export const Homepage = () => {
   const [hasProfile, setHasProfile] = useState(false);
   const [loading, setLoading] = useState(true);
   const [language, setLanguage] = useState('en');
+  const [showAchievements, setShowAchievements] = useState(false);
+  
+  const { 
+    progress, 
+    achievements, 
+    newAchievements, 
+    loading: gamificationLoading,
+    awardPoints,
+    dismissAchievement
+  } = useGamification();
 
   useEffect(() => {
     if (user) {
@@ -78,6 +94,12 @@ export const Homepage = () => {
       if (result.success && result.profile) {
         setBabyProfile(result.profile);
         setHasProfile(true);
+        
+        // Award points for profile completion (only for new profiles)
+        if (!hasProfile) {
+          await awardPoints('profile');
+        }
+        
         toast({
           title: "Success!",
           description: hasProfile ? "Profile updated successfully!" : "Baby profile created successfully!",
@@ -126,7 +148,7 @@ export const Homepage = () => {
     }
   };
 
-  if (loading) {
+  if (loading || gamificationLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">
@@ -141,6 +163,23 @@ export const Homepage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 pb-20">
+      {/* Achievement Notifications */}
+      {newAchievements.map((achievement, index) => (
+        <AchievementNotification
+          key={achievement.id}
+          achievement={achievement}
+          isVisible={true}
+          onClose={() => dismissAchievement(achievement.id)}
+        />
+      ))}
+
+      {/* Achievements Modal */}
+      <AchievementsModal
+        isOpen={showAchievements}
+        onClose={() => setShowAchievements(false)}
+        achievements={achievements}
+      />
+
       {/* Header with app title and menu */}
       <div className="flex items-center justify-between p-4 bg-white/80 backdrop-blur-sm shadow-sm">
         <div className="flex items-center">
@@ -149,14 +188,32 @@ export const Homepage = () => {
           </div>
           <h1 className="text-xl font-bold text-gray-800">Healthy Tummies</h1>
         </div>
-        <HeaderMenu
-          language={language}
-          onToggleLanguage={handleToggleLanguage}
-          onSignOut={handleSignOut}
-        />
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setShowAchievements(true)}
+            className="p-2 rounded-full bg-yellow-100 hover:bg-yellow-200 transition-colors"
+          >
+            <Award className="w-5 h-5 text-yellow-600" />
+          </button>
+          <HeaderMenu
+            language={language}
+            onToggleLanguage={handleToggleLanguage}
+            onSignOut={handleSignOut}
+          />
+        </div>
       </div>
       
       <div className="container mx-auto px-4 py-6 space-y-6 max-w-4xl">
+        {/* Gamification Progress */}
+        {progress && (
+          <FeedingJourneyProgress
+            currentLevel={progress.feeding_level}
+            totalPoints={progress.total_points}
+            levelProgress={progress.level_progress}
+            currentStreak={progress.current_streak}
+          />
+        )}
+
         {/* Baby Profile Section */}
         <BabyProfileCard
           hasProfile={hasProfile}
