@@ -25,8 +25,8 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
       
       if (result.success && result.recipes) {
         setRecipes(result.recipes);
-        // Mock tried count for now - will be replaced with real data
-        setTriedCount(Math.floor(Math.random() * 15));
+        // Set tried count to 0 initially
+        setTriedCount(0);
       }
     } catch (error) {
       console.error('Error fetching recommended recipes:', error);
@@ -37,30 +37,6 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
 
   const handleViewAllRecipes = () => {
     navigate('/recipes');
-  };
-
-  const formatIngredients = (ingredients: any): string => {
-    if (!ingredients) return '';
-    
-    // Handle Json type - could be array or string
-    let ingredientArray: any[] = [];
-    
-    if (Array.isArray(ingredients)) {
-      ingredientArray = ingredients;
-    } else if (typeof ingredients === 'string') {
-      try {
-        const parsed = JSON.parse(ingredients);
-        ingredientArray = Array.isArray(parsed) ? parsed : [parsed];
-      } catch {
-        ingredientArray = [ingredients];
-      }
-    } else if (typeof ingredients === 'object') {
-      ingredientArray = [ingredients];
-    }
-    
-    return ingredientArray.slice(0, 3).map(ing => 
-      typeof ing === 'string' ? ing : ing?.name || ing?.ingredient || 'Ingredient'
-    ).join(', ') + (ingredientArray.length > 3 ? '...' : '');
   };
 
   const getRecipeImage = (recipe: Recipe): string => {
@@ -128,8 +104,7 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
               />
             </div>
             <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-gray-800 text-sm mb-1 truncate">{recipe.title}</h4>
-              <p className="text-xs text-gray-600 mb-2 line-clamp-2">{recipe.description}</p>
+              <h4 className="font-semibold text-gray-800 text-sm mb-2 truncate">{recipe.title}</h4>
               <div className="flex items-center space-x-3 text-xs text-gray-500">
                 <div className="flex items-center space-x-1">
                   <Clock className="w-3 h-3" />
@@ -140,11 +115,6 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
                   <span>{recipe.servings || 1} serving{(recipe.servings || 1) > 1 ? 's' : ''}</span>
                 </div>
               </div>
-              {recipe.ingredients && (
-                <p className="text-xs text-gray-500 mt-1 truncate">
-                  {formatIngredients(recipe.ingredients)}
-                </p>
-              )}
             </div>
             <div className="flex-shrink-0">
               <Eye className="w-4 h-4 text-gray-400 group-hover:text-pink-500 transition-colors" />
