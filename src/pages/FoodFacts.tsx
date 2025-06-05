@@ -18,8 +18,6 @@ const FoodFacts = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'introduced' | 'not-introduced'>('all');
-  const [selectedFoods, setSelectedFoods] = useState<string[]>([]);
-  const [bulkMode, setBulkMode] = useState(false);
   const [selectedFood, setSelectedFood] = useState<FoodWithIntroduction | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -116,50 +114,7 @@ const FoodFacts = () => {
   };
 
   const handleFoodClick = (food: FoodWithIntroduction) => {
-    if (bulkMode) {
-      toggleFoodSelection(food._id);
-    } else {
-      setSelectedFood(food);
-    }
-  };
-
-  const toggleFoodSelection = (foodId: string) => {
-    setSelectedFoods(prev => 
-      prev.includes(foodId) 
-        ? prev.filter(id => id !== foodId)
-        : [...prev, foodId]
-    );
-  };
-
-  const handleBulkMarkAsIntroduced = async () => {
-    if (!babyProfile || selectedFoods.length === 0) return;
-
-    try {
-      const result = await IntroducedFoodsService.markFoodsAsIntroduced(babyProfile.id!, selectedFoods);
-      
-      if (result.success) {
-        toast({
-          title: "Success!",
-          description: `${selectedFoods.length} foods marked as introduced`,
-        });
-        setSelectedFoods([]);
-        setBulkMode(false);
-        await fetchFoods();
-      } else {
-        toast({
-          title: "Error",
-          description: result.error || "Failed to mark foods as introduced",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Error marking foods as introduced:', error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
-    }
+    setSelectedFood(food);
   };
 
   const handleToggleIntroduced = async (food: FoodWithIntroduction) => {
@@ -221,46 +176,19 @@ const FoodFacts = () => {
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 pb-20">
       <div className="container mx-auto px-4 py-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <button
-              onClick={() => navigate('/')}
-              className="p-2 hover:bg-white/50 rounded-lg transition-colors mr-3"
-            >
-              <ArrowLeft className="w-6 h-6 text-gray-700" />
-            </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">Food Facts</h1>
-              <p className="text-sm text-gray-600">
-                {babyProfile ? `For ${babyProfile.name}` : 'Discover safe foods for your baby'}
-              </p>
-            </div>
-          </div>
+        <div className="flex items-center mb-6">
           <button
-            onClick={() => {
-              if (bulkMode && selectedFoods.length > 0) {
-                handleBulkMarkAsIntroduced();
-              } else {
-                setBulkMode(!bulkMode);
-                setSelectedFoods([]);
-              }
-            }}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              bulkMode 
-                ? selectedFoods.length > 0
-                  ? 'bg-green-500 text-white hover:bg-green-600'
-                  : 'bg-gray-300 text-gray-500'
-                : 'bg-blue-500 text-white hover:bg-blue-600'
-            }`}
-            disabled={bulkMode && selectedFoods.length === 0}
+            onClick={() => navigate('/')}
+            className="p-2 hover:bg-white/50 rounded-lg transition-colors mr-3"
           >
-            {bulkMode 
-              ? selectedFoods.length > 0 
-                ? `Mark ${selectedFoods.length} as Introduced`
-                : 'Cancel'
-              : 'Bulk Select'
-            }
+            <ArrowLeft className="w-6 h-6 text-gray-700" />
           </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Food Facts</h1>
+            <p className="text-sm text-gray-600">
+              {babyProfile ? `For ${babyProfile.name}` : 'Discover safe foods for your baby'}
+            </p>
+          </div>
         </div>
 
         {/* Search and Filter */}
@@ -272,7 +200,7 @@ const FoodFacts = () => {
         />
 
         {/* Results Stats */}
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4">
           <p className="text-sm text-gray-600">
             {searchLoading ? (
               <span className="flex items-center gap-2">
@@ -283,11 +211,6 @@ const FoodFacts = () => {
               `Showing ${foods.length} of ${totalCount} foods (page ${currentPage} of ${totalPages})`
             )}
           </p>
-          {bulkMode && selectedFoods.length > 0 && (
-            <p className="text-sm text-blue-600 font-medium">
-              {selectedFoods.length} selected
-            </p>
-          )}
         </div>
 
         {/* Foods Grid */}
@@ -301,8 +224,8 @@ const FoodFacts = () => {
               <FoodCard
                 key={food._id}
                 food={food}
-                bulkMode={bulkMode}
-                isSelected={selectedFoods.includes(food._id)}
+                bulkMode={false}
+                isSelected={false}
                 onClick={handleFoodClick}
                 onToggleIntroduced={handleToggleIntroduced}
               />
