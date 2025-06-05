@@ -39,11 +39,28 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
     navigate('/recipes');
   };
 
-  const formatIngredients = (ingredients: any[]): string => {
-    if (!ingredients || !Array.isArray(ingredients)) return '';
-    return ingredients.slice(0, 3).map(ing => 
-      typeof ing === 'string' ? ing : ing.name || ing.ingredient
-    ).join(', ') + (ingredients.length > 3 ? '...' : '');
+  const formatIngredients = (ingredients: any): string => {
+    if (!ingredients) return '';
+    
+    // Handle Json type - could be array or string
+    let ingredientArray: any[] = [];
+    
+    if (Array.isArray(ingredients)) {
+      ingredientArray = ingredients;
+    } else if (typeof ingredients === 'string') {
+      try {
+        const parsed = JSON.parse(ingredients);
+        ingredientArray = Array.isArray(parsed) ? parsed : [parsed];
+      } catch {
+        ingredientArray = [ingredients];
+      }
+    } else if (typeof ingredients === 'object') {
+      ingredientArray = [ingredients];
+    }
+    
+    return ingredientArray.slice(0, 3).map(ing => 
+      typeof ing === 'string' ? ing : ing?.name || ing?.ingredient || 'Ingredient'
+    ).join(', ') + (ingredientArray.length > 3 ? '...' : '');
   };
 
   const getRecipeImage = (recipe: Recipe): string => {

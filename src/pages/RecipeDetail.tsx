@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Share2, Heart, Clock, Users, Star, Check } from 'lucide-react';
@@ -97,12 +96,28 @@ export const RecipeDetail = () => {
     }
   };
 
-  const renderIngredients = (ingredients: any[]) => {
-    if (!ingredients || !Array.isArray(ingredients)) return null;
+  const renderIngredients = (ingredients: any) => {
+    if (!ingredients) return null;
     
-    return ingredients.map((ingredient, index) => {
+    // Handle Json type - could be array or string
+    let ingredientArray: any[] = [];
+    
+    if (Array.isArray(ingredients)) {
+      ingredientArray = ingredients;
+    } else if (typeof ingredients === 'string') {
+      try {
+        const parsed = JSON.parse(ingredients);
+        ingredientArray = Array.isArray(parsed) ? parsed : [parsed];
+      } catch {
+        ingredientArray = [ingredients];
+      }
+    } else if (typeof ingredients === 'object') {
+      ingredientArray = [ingredients];
+    }
+    
+    return ingredientArray.map((ingredient, index) => {
       const ingredientText = typeof ingredient === 'string' ? ingredient : 
-        ingredient.name || ingredient.ingredient || JSON.stringify(ingredient);
+        ingredient?.name || ingredient?.ingredient || JSON.stringify(ingredient);
       
       return (
         <div 
@@ -129,12 +144,28 @@ export const RecipeDetail = () => {
     });
   };
 
-  const renderMethod = (method: any[]) => {
-    if (!method || !Array.isArray(method)) return null;
+  const renderMethod = (method: any) => {
+    if (!method) return null;
     
-    return method.map((step, index) => {
+    // Handle Json type - could be array or string
+    let methodArray: any[] = [];
+    
+    if (Array.isArray(method)) {
+      methodArray = method;
+    } else if (typeof method === 'string') {
+      try {
+        const parsed = JSON.parse(method);
+        methodArray = Array.isArray(parsed) ? parsed : [parsed];
+      } catch {
+        methodArray = [method];
+      }
+    } else if (typeof method === 'object') {
+      methodArray = [method];
+    }
+    
+    return methodArray.map((step, index) => {
       const stepText = typeof step === 'string' ? step : 
-        step.instruction || step.step || JSON.stringify(step);
+        step?.instruction || step?.step || JSON.stringify(step);
       
       return (
         <div key={index} className="flex gap-4 p-4 bg-white rounded-lg border border-gray-200">

@@ -1,13 +1,14 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 
 export interface Recipe {
   _id: string;
   title: string;
   description: string;
   servings: number;
-  ingredients: any[];
-  method: any[];
+  ingredients: Json;
+  method: Json;
   link: string;
   time: string;
 }

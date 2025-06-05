@@ -11,6 +11,8 @@ import ScanScreen from "./pages/ScanScreen";
 import SearchScreen from "./pages/SearchScreen";
 import ScanResult from "./pages/ScanResult";
 import FoodFacts from "./pages/FoodFacts";
+import Recipes from "./pages/Recipes";
+import RecipeDetail from "./pages/RecipeDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
