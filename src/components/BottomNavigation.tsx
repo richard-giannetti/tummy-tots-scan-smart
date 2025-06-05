@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Home, Search, Camera, History, Book } from 'lucide-react';
+import { Home, Search, Camera, History, Book, ChefHat } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface BottomNavigationProps {
@@ -14,7 +14,7 @@ export const BottomNavigation = ({ currentRoute }: BottomNavigationProps) => {
     { icon: Home, label: 'Home', route: '/', active: currentRoute === '/' },
     { icon: Search, label: 'Search', route: '/search', active: currentRoute === '/search' },
     { icon: Camera, label: 'Scan', route: '/scan', active: currentRoute === '/scan', isSpecial: true },
-    { icon: History, label: 'History', route: '/history', active: false },
+    { icon: ChefHat, label: 'Recipes', route: '/recipes', active: currentRoute === '/recipes' },
     { icon: Book, label: 'Foods', route: '/food-facts', active: currentRoute === '/food-facts' },
   ];
 

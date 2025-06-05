@@ -155,6 +155,39 @@ export type Database = {
           },
         ]
       }
+      recipes: {
+        Row: {
+          _id: string | null
+          description: string | null
+          ingredients: Json | null
+          link: string | null
+          method: Json | null
+          servings: number | null
+          time: string | null
+          title: string | null
+        }
+        Insert: {
+          _id?: string | null
+          description?: string | null
+          ingredients?: Json | null
+          link?: string | null
+          method?: Json | null
+          servings?: number | null
+          time?: string | null
+          title?: string | null
+        }
+        Update: {
+          _id?: string | null
+          description?: string | null
+          ingredients?: Json | null
+          link?: string | null
+          method?: Json | null
+          servings?: number | null
+          time?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
       scan_summary: {
         Row: {
           average_score: number | null
