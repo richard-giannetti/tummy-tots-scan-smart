@@ -58,9 +58,22 @@ export const Homepage = () => {
     }
   };
 
-  const handleProfileComplete = async (profileData: Omit<BabyProfile, 'id' | 'user_id' | 'created_at'>) => {
+  const handleProfileComplete = async (profileData: BabyProfile | Omit<BabyProfile, 'id' | 'user_id' | 'created_at'>) => {
     try {
-      const result = await BabyProfileService.saveBabyProfile(profileData);
+      // If we have a complete profile (with ID), just update the state
+      if ('id' in profileData && profileData.id) {
+        setBabyProfile(profileData as BabyProfile);
+        setHasProfile(true);
+        toast({
+          title: "Success!",
+          description: "Profile updated successfully!",
+        });
+        return;
+      }
+
+      // Otherwise, save the profile data
+      const dataToSave = profileData as Omit<BabyProfile, 'id' | 'user_id' | 'created_at'>;
+      const result = await BabyProfileService.saveBabyProfile(dataToSave);
       
       if (result.success && result.profile) {
         setBabyProfile(result.profile);

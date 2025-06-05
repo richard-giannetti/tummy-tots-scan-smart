@@ -8,14 +8,21 @@ import { toast } from '@/hooks/use-toast';
 interface BabyProfileCardProps {
   hasProfile: boolean;
   babyProfile: BabyProfile | null;
-  onProfileComplete: (profileData: Omit<BabyProfile, 'id' | 'user_id' | 'created_at'>) => void;
+  onProfileComplete: (profileData: BabyProfile) => void;
 }
 
 export const BabyProfileCard = ({ hasProfile, babyProfile, onProfileComplete }: BabyProfileCardProps) => {
   const [isEditing, setIsEditing] = useState(!hasProfile);
 
   const handleSubmit = (profileData: Omit<BabyProfile, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-    onProfileComplete(profileData);
+    // Create a proper BabyProfile object with the existing ID if updating
+    const completeProfile: BabyProfile = {
+      id: babyProfile?.id,
+      user_id: babyProfile?.user_id,
+      created_at: babyProfile?.created_at,
+      ...profileData
+    };
+    onProfileComplete(completeProfile);
     setIsEditing(false);
   };
 
@@ -33,7 +40,7 @@ export const BabyProfileCard = ({ hasProfile, babyProfile, onProfileComplete }: 
     try {
       console.log('Updating avatar with URL:', avatarUrl);
       
-      // Create updated profile with new avatar URL
+      // Create updated profile data while preserving existing profile structure
       const updatedProfileData = {
         name: babyProfile.name,
         birth_date: babyProfile.birth_date,
@@ -45,6 +52,7 @@ export const BabyProfileCard = ({ hasProfile, babyProfile, onProfileComplete }: 
       const result = await BabyProfileService.saveBabyProfile(updatedProfileData);
       
       if (result.success && result.profile) {
+        // Pass the complete profile back to parent
         onProfileComplete(result.profile);
         toast({
           title: "Success!",

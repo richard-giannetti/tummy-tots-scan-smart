@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { ChefHat, Book, ArrowRight } from 'lucide-react';
+import { ChefHat, Book, ArrowRight, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useIntroducedFoodsCount } from '@/hooks/useIntroducedFoodsCount';
 
 interface FoodFactsProps {
   babyName?: string;
@@ -9,6 +10,7 @@ interface FoodFactsProps {
 
 export const FoodFacts = ({ babyName }: FoodFactsProps) => {
   const navigate = useNavigate();
+  const { count: introducedCount, loading } = useIntroducedFoodsCount();
 
   const handleExploreClick = () => {
     navigate('/food-facts');
@@ -35,6 +37,28 @@ export const FoodFacts = ({ babyName }: FoodFactsProps) => {
           Explore
           <ArrowRight className="w-4 h-4 ml-1" />
         </button>
+      </div>
+
+      {/* Progress indicator */}
+      <div className="mb-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+            <span className="text-sm font-medium text-green-800">
+              Foods Introduced
+            </span>
+          </div>
+          <div className="text-right">
+            {loading ? (
+              <div className="w-8 h-6 bg-green-200 rounded animate-pulse"></div>
+            ) : (
+              <span className="text-2xl font-bold text-green-600">{introducedCount}</span>
+            )}
+            <p className="text-xs text-green-600 mt-1">
+              {babyName ? `${babyName}'s progress` : 'Your progress'}
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

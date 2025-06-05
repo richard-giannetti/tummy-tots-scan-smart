@@ -13,7 +13,7 @@ export const BottomNavigation = ({ currentRoute }: BottomNavigationProps) => {
   const navItems = [
     { icon: Home, label: 'Home', route: '/', active: currentRoute === '/' },
     { icon: Search, label: 'Search', route: '/search', active: currentRoute === '/search' },
-    { icon: Camera, label: 'Scan', route: '/scan', active: currentRoute === '/scan' },
+    { icon: Camera, label: 'Scan', route: '/scan', active: currentRoute === '/scan', isSpecial: true },
     { icon: History, label: 'History', route: '/history', active: false },
     { icon: Book, label: 'Foods', route: '/food-facts', active: currentRoute === '/food-facts' },
   ];
@@ -27,6 +27,30 @@ export const BottomNavigation = ({ currentRoute }: BottomNavigationProps) => {
       <div className="flex items-center justify-around py-2">
         {navItems.map((item) => {
           const IconComponent = item.icon;
+          
+          // Special styling for the scan button
+          if (item.isSpecial) {
+            return (
+              <button
+                key={item.route}
+                onClick={() => handleNavigation(item.route)}
+                className={`relative flex flex-col items-center py-1 px-3 rounded-xl transition-all transform hover:scale-105 ${
+                  item.active
+                    ? 'text-white bg-gradient-to-r from-pink-500 to-purple-500 shadow-lg'
+                    : 'text-white bg-gradient-to-r from-pink-400 to-purple-400 shadow-md hover:from-pink-500 hover:to-purple-500'
+                }`}
+              >
+                <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-1">
+                  <IconComponent className="w-5 h-5" />
+                </div>
+                <span className="text-xs font-bold">{item.label}</span>
+                {/* Subtle glow effect */}
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 opacity-30 blur-sm -z-10"></div>
+              </button>
+            );
+          }
+          
+          // Regular styling for other buttons
           return (
             <button
               key={item.route}
