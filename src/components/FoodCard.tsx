@@ -27,7 +27,7 @@ export const FoodCard = ({
           : ''
       }`}
     >
-      <div className="flex items-start justify-between mb-2">
+      <div className="flex items-start gap-3 mb-2">
         <div className="w-10 h-10 bg-gradient-to-r from-green-200 to-emerald-200 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
           {food.Image ? (
             <img 
@@ -45,46 +45,50 @@ export const FoodCard = ({
           )}
           <span className="text-lg hidden">🍎</span>
         </div>
-        <div className="flex items-center">
-          {bulkMode ? (
-            isSelected ? (
-              <CheckCircle className="w-4 h-4 text-blue-500" />
-            ) : (
-              <Circle className="w-4 h-4 text-gray-400" />
-            )
-          ) : (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleIntroduced(food);
-              }}
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              {food.introduced ? (
-                <CheckCircle className="w-4 h-4 text-green-500" />
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="font-semibold text-gray-800 text-sm leading-tight truncate">
+              {food.name || 'Unknown Food'}
+            </h3>
+            <div className="flex items-center ml-2">
+              {bulkMode ? (
+                isSelected ? (
+                  <CheckCircle className="w-4 h-4 text-blue-500" />
+                ) : (
+                  <Circle className="w-4 h-4 text-gray-400" />
+                )
               ) : (
-                <Circle className="w-4 h-4 text-gray-400" />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleIntroduced(food);
+                  }}
+                  className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  {food.introduced ? (
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <Circle className="w-4 h-4 text-gray-400" />
+                  )}
+                </button>
               )}
-            </button>
-          )}
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-1 flex-wrap">
+            {food.foodType && (
+              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                {food.foodType}
+              </span>
+            )}
+            {food.introduced && (
+              <span className="text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded-full">
+                Introduced
+              </span>
+            )}
+          </div>
         </div>
-      </div>
-      
-      <h3 className="font-semibold text-gray-800 mb-1 text-sm leading-tight">
-        {food.name || 'Unknown Food'}
-      </h3>
-      
-      <div className="flex items-center gap-1 mb-2 flex-wrap">
-        {food.foodType && (
-          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-            {food.foodType}
-          </span>
-        )}
-        {food.introduced && (
-          <span className="text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded-full">
-            Introduced
-          </span>
-        )}
       </div>
       
       <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
