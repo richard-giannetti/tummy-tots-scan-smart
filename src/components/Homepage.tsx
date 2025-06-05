@@ -204,16 +204,6 @@ export const Homepage = () => {
       </div>
       
       <div className="container mx-auto px-4 py-6 space-y-6 max-w-4xl">
-        {/* Gamification Progress */}
-        {progress && (
-          <FeedingJourneyProgress
-            currentLevel={progress.feeding_level}
-            totalPoints={progress.total_points}
-            levelProgress={progress.level_progress}
-            currentStreak={progress.current_streak}
-          />
-        )}
-
         {/* Baby Profile Section */}
         <BabyProfileCard
           hasProfile={hasProfile}
@@ -232,6 +222,16 @@ export const Homepage = () => {
 
         {/* Recipe Recommendations Section */}
         <RecipeRecommendations babyName={babyProfile?.name} />
+
+        {/* Gamification Progress - moved after recipes */}
+        {progress && (
+          <FeedingJourneyProgress
+            currentLevel={progress.feeding_level}
+            totalPoints={progress.total_points}
+            levelProgress={progress.level_progress}
+            currentStreak={progress.current_streak}
+          />
+        )}
       </div>
 
       {/* Bottom Navigation */}
