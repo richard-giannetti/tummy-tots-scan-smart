@@ -57,6 +57,7 @@ export const useGamification = () => {
       let result;
       switch (action) {
         case 'scan':
+          console.log('Attempting to award scan points...');
           result = await GamificationService.awardScanPoints(user.id);
           break;
         case 'recipe':
@@ -80,6 +81,14 @@ export const useGamification = () => {
         if (result.newAchievements && result.newAchievements.length > 0) {
           setNewAchievements(result.newAchievements);
           await fetchAchievements();
+          
+          // Show toast for new achievements
+          result.newAchievements.forEach(achievement => {
+            toast({
+              title: "Achievement Unlocked! 🎉",
+              description: `${achievement.icon} ${achievement.name} - ${achievement.description}`,
+            });
+          });
         }
       } else {
         console.error('Failed to award points:', result.error);

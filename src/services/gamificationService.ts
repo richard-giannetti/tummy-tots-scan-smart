@@ -185,7 +185,50 @@ export class GamificationService {
   }
 
   /**
-   * Award points for specific actions
+   * Check if user already performed action today to prevent duplicate awards
+   */
+  static async hasPerformedActionToday(userId: string, action: string): Promise<boolean> {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Check scan_summary for scan actions
+      if (action === 'scan_performed') {
+        const { data, error } = await supabase
+          .from('scan_summary')
+          .select('scan_count')
+          .eq('user_id', userId)
+          .eq('scan_date', today)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error checking scan activity:', error);
+          return false;
+        }
+
+        return data ? data.scan_count > 0 : false;
+      }
+
+      // For other actions, check user_progress last_activity_date
+      const { data, error } = await supabase
+        .from('user_progress')
+        .select('last_activity_date')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error checking last activity:', error);
+        return false;
+      }
+
+      return data?.last_activity_date === today;
+    } catch (error) {
+      console.error('Error checking action status:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Award points for specific actions with duplicate prevention
    */
   static async awardPoints(
     userId: string, 
@@ -194,6 +237,15 @@ export class GamificationService {
     checkAchievements = true
   ): Promise<AchievementResponse> {
     try {
+      // Prevent duplicate point awards for daily actions
+      if (action === 'scan_performed') {
+        const hasScannedToday = await this.hasPerformedActionToday(userId, action);
+        if (hasScannedToday) {
+          console.log('User already received points for scanning today');
+          return { success: true, newAchievements: [] };
+        }
+      }
+
       const progressResult = await this.getUserProgress(userId);
       if (!progressResult.success || !progressResult.progress) {
         return { success: false, error: 'Failed to get user progress' };
@@ -204,20 +256,28 @@ export class GamificationService {
       const newLevel = this._calculateLevel(newTotalPoints);
       const levelProgress = this._calculateLevelProgress(newTotalPoints);
 
-      // Update streak if applicable
+      // Update streak only for scan actions
       const today = new Date().toISOString().split('T')[0];
-      const lastActivity = new Date(currentProgress.last_activity_date);
-      const todayDate = new Date(today);
-      const daysDiff = Math.floor((todayDate.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24));
-
       let newStreak = currentProgress.current_streak;
-      if (daysDiff === 1) {
-        newStreak += 1;
-      } else if (daysDiff > 1) {
-        newStreak = 1;
-      }
+      let longestStreak = currentProgress.longest_streak;
 
-      const longestStreak = Math.max(currentProgress.longest_streak, newStreak);
+      if (action === 'scan_performed') {
+        const lastActivity = new Date(currentProgress.last_activity_date);
+        const todayDate = new Date(today);
+        const daysDiff = Math.floor((todayDate.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24));
+
+        if (daysDiff === 1) {
+          newStreak += 1;
+        } else if (daysDiff > 1) {
+          newStreak = 1;
+        } else if (daysDiff === 0) {
+          // Same day, don't change streak but don't award points again
+          console.log('Same day scan, maintaining streak but not awarding duplicate points');
+          return { success: true, newAchievements: [] };
+        }
+
+        longestStreak = Math.max(currentProgress.longest_streak, newStreak);
+      }
 
       // Update progress
       const { error: updateError } = await supabase
@@ -246,6 +306,7 @@ export class GamificationService {
         }
       }
 
+      console.log(`Awarded ${points} points for ${action}. Total: ${newTotalPoints}`);
       return { success: true, newAchievements };
     } catch (error: any) {
       console.error('GamificationService: Unexpected error awarding points:', error);
@@ -278,14 +339,36 @@ export class GamificationService {
   }
 
   /**
-   * Check for profile completion points
+   * Check for profile completion points (one-time only)
    */
   static async checkProfileCompletion(userId: string): Promise<AchievementResponse> {
-    return await this.awardPoints(userId, 'profile_completion', 50);
+    const progressResult = await this.getUserProgress(userId);
+    if (!progressResult.success || !progressResult.progress) {
+      return { success: false, error: 'Failed to get user progress' };
+    }
+
+    // Check if profile completion points already awarded
+    const achievements = progressResult.progress.achievements || [];
+    if (achievements.includes('profile_complete')) {
+      return { success: true, newAchievements: [] };
+    }
+
+    // Award points and mark achievement
+    const result = await this.awardPoints(userId, 'profile_completion', 50);
+    if (result.success) {
+      // Add profile completion to achievements
+      const updatedAchievements = [...achievements, 'profile_complete'];
+      await supabase
+        .from('user_progress')
+        .update({ achievements: updatedAchievements })
+        .eq('user_id', userId);
+    }
+
+    return result;
   }
 
   /**
-   * Award points for scanning
+   * Award points for scanning (daily limit)
    */
   static async awardScanPoints(userId: string): Promise<AchievementResponse> {
     return await this.awardPoints(userId, 'scan_performed', 10);
