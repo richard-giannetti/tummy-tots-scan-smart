@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScanService } from '@/services/scanService';
 import { ROUTES } from '@/constants/app';
+import { toast } from '@/hooks/use-toast';
 
 const SearchScreen = () => {
   const navigate = useNavigate();
@@ -21,27 +22,127 @@ const SearchScreen = () => {
 
     setIsSearching(true);
     
-    // Simulate search delay
-    setTimeout(() => {
-      // Generate mock result based on search query
-      const mockResult = ScanService.generateMockScanResult();
+    try {
+      // First try to search by barcode if the query looks like a barcode (all numbers)
+      const isBarcode = /^\d{8,}$/.test(searchQuery.trim());
       
-      // Update product name to reflect search query
-      mockResult.product.productName = searchQuery.includes('puree') 
-        ? 'Organic Apple & Banana Puree'
-        : searchQuery.includes('cereal')
-        ? 'Baby Rice Cereal'
-        : searchQuery.includes('yogurt')
-        ? 'Organic Baby Yogurt'
-        : `${searchQuery} Baby Food`;
-
-      setIsSearching(false);
+      if (isBarcode) {
+        console.log('Searching by barcode:', searchQuery);
+        const productData = await ScanService.getProductByBarcode(searchQuery.trim());
+        
+        if (productData) {
+          const scanResult = ScanService.calculateHealthyTummiesScore(productData, 8);
+          
+          toast({
+            title: "Product Found!",
+            description: `Found ${productData.productName}`,
+          });
+          
+          navigate('/scan-result', { 
+            state: { scanResult }
+          });
+          return;
+        }
+      }
       
-      // Navigate to scan result with the mock data
-      navigate('/scan-result', { 
-        state: { scanResult: mockResult }
+      // For text searches, we'll use the Open Food Facts text search API
+      await searchByText(searchQuery.trim());
+      
+    } catch (error) {
+      console.error('Search error:', error);
+      toast({
+        title: "Search Error",
+        description: "Failed to search products. Please try again.",
+        variant: "destructive",
       });
-    }, 1500);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const searchByText = async (query: string) => {
+    try {
+      // Use Open Food Facts search API
+      const searchUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20&fields=code,product_name,brands,nutriscore_grade,nova_group,ecoscore_grade,nutriments,ingredients_text,image_url,image_front_url`;
+      
+      console.log('Searching Open Food Facts for:', query);
+      
+      const response = await fetch(searchUrl, {
+        headers: {
+          'User-Agent': 'HealthyTummies/1.0 (hello@healthy-tummies.com)',
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Search request failed');
+      }
+
+      const data = await response.json();
+      
+      if (!data.products || data.products.length === 0) {
+        toast({
+          title: "No Products Found",
+          description: "No products found matching your search. Try different keywords.",
+        });
+        return;
+      }
+
+      // Use the first result for now
+      const firstProduct = data.products[0];
+      
+      if (!firstProduct.product_name) {
+        toast({
+          title: "No Products Found",
+          description: "No valid products found. Try different keywords.",
+        });
+        return;
+      }
+
+      // Format the product data using the existing ScanService method
+      const productData = {
+        barcode: firstProduct.code,
+        productName: firstProduct.product_name || firstProduct.product_name_en || 'Unknown Product',
+        brand: firstProduct.brands || '',
+        imageUrl: firstProduct.image_front_url || firstProduct.image_url || 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=800&h=600&fit=crop',
+        nutriScore: firstProduct.nutriscore_grade?.toUpperCase(),
+        novaScore: firstProduct.nova_group,
+        ecoScore: firstProduct.ecoscore_grade?.toUpperCase(),
+        nutritionalValues: {
+          energy: firstProduct.nutriments?.['energy-kcal_100g'],
+          sugar: firstProduct.nutriments?.sugars_100g,
+          salt: firstProduct.nutriments?.salt_100g,
+          saturatedFat: firstProduct.nutriments?.['saturated-fat_100g'],
+          fiber: firstProduct.nutriments?.fiber_100g,
+          protein: firstProduct.nutriments?.proteins_100g
+        },
+        ingredients: firstProduct.ingredients_text,
+        allergens: firstProduct.allergens_tags || [],
+        additives: firstProduct.additives_tags || [],
+        categories: firstProduct.categories_tags || [],
+      };
+
+      // Calculate the Healthy Tummies score
+      const scanResult = ScanService.calculateHealthyTummiesScore(productData, 8);
+      
+      toast({
+        title: "Product Found!",
+        description: `Found ${productData.productName}`,
+      });
+      
+      // Navigate to scan result with the search result
+      navigate('/scan-result', { 
+        state: { scanResult }
+      });
+      
+    } catch (error) {
+      console.error('Text search error:', error);
+      toast({
+        title: "Search Error",
+        description: "Failed to search products. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -126,19 +227,20 @@ const SearchScreen = () => {
               <li>• Try product names like "apple puree" or "baby cereal"</li>
               <li>• Enter barcode numbers for exact matches</li>
               <li>• Search by brand names like "Gerber" or "Earth's Best"</li>
-              <li>• Include age ranges like "6+ months baby food"</li>
+              <li>• Include keywords like "organic" or "baby food"</li>
             </ul>
           </div>
 
-          {/* Recent Searches - Placeholder */}
+          {/* Recent Searches */}
           <div className="bg-white rounded-2xl p-6 shadow-sm">
-            <h3 className="font-semibold text-gray-800 mb-3">Recent Searches</h3>
+            <h3 className="font-semibold text-gray-800 mb-3">Popular Searches</h3>
             <div className="space-y-2">
-              {['Apple & Banana Puree', 'Organic Rice Cereal', 'Sweet Potato Baby Food'].map((item, index) => (
+              {['Apple puree baby food', 'Organic rice cereal', 'Banana baby food', 'Sweet potato puree'].map((item, index) => (
                 <button
                   key={index}
                   onClick={() => setSearchQuery(item)}
                   className="w-full text-left px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg text-sm transition-colors"
+                  disabled={isSearching}
                 >
                   {item}
                 </button>
