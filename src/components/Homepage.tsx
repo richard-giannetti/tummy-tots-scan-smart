@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { BabyProfileService, BabyProfile } from '@/services/babyProfileService';
@@ -15,7 +14,7 @@ import { AchievementsModal } from './AchievementsModal';
 import { useGamification } from '@/hooks/useGamification';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { Award, RotateCcw } from 'lucide-react';
+import { Award } from 'lucide-react';
 
 export const Homepage = () => {
   const { user, signOut } = useAuth();
@@ -32,8 +31,7 @@ export const Homepage = () => {
     newAchievements, 
     loading: gamificationLoading,
     awardPoints,
-    dismissAchievement,
-    resetProgress
+    dismissAchievement
   } = useGamification();
 
   useEffect(() => {
@@ -214,13 +212,6 @@ export const Homepage = () => {
             title="View Achievements"
           >
             <Award className="w-5 h-5 text-yellow-600" />
-          </button>
-          <button
-            onClick={resetProgress}
-            className="p-2 rounded-full bg-red-100 hover:bg-red-200 transition-colors"
-            title="Reset Points (Fix Discrepancy)"
-          >
-            <RotateCcw className="w-5 h-5 text-red-600" />
           </button>
           <HeaderMenu
             language={language}
