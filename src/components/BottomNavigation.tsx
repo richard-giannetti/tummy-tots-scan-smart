@@ -24,7 +24,7 @@ export const BottomNavigation = ({ currentRoute }: BottomNavigationProps) => {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
-      <div className="flex items-center justify-around py-2">
+      <div className="flex items-center justify-around py-1">
         {navItems.map((item) => {
           const IconComponent = item.icon;
           
@@ -34,16 +34,16 @@ export const BottomNavigation = ({ currentRoute }: BottomNavigationProps) => {
               <button
                 key={item.route}
                 onClick={() => handleNavigation(item.route)}
-                className={`relative flex flex-col items-center py-1 px-3 rounded-xl transition-all transform hover:scale-105 ${
+                className={`relative flex flex-col items-center py-1 px-2 rounded-xl transition-all transform hover:scale-105 ${
                   item.active
                     ? 'text-white bg-gradient-to-r from-pink-500 to-purple-500 shadow-lg'
                     : 'text-white bg-gradient-to-r from-pink-400 to-purple-400 shadow-md hover:from-pink-500 hover:to-purple-500'
                 }`}
               >
-                <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-1">
-                  <IconComponent className="w-5 h-5" />
+                <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-0.5">
+                  <IconComponent className="w-4 h-4" />
                 </div>
-                <span className="text-xs font-bold">{item.label}</span>
+                <span className="text-xs font-bold leading-tight">{item.label}</span>
                 {/* Subtle glow effect */}
                 <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 opacity-30 blur-sm -z-10"></div>
               </button>
@@ -55,14 +55,14 @@ export const BottomNavigation = ({ currentRoute }: BottomNavigationProps) => {
             <button
               key={item.route}
               onClick={() => handleNavigation(item.route)}
-              className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
+              className={`flex flex-col items-center py-1 px-2 rounded-lg transition-colors ${
                 item.active
                   ? 'text-pink-600 bg-pink-50'
                   : 'text-gray-600 hover:text-pink-600 hover:bg-pink-50'
               }`}
             >
-              <IconComponent className="w-6 h-6 mb-1" />
-              <span className="text-xs font-medium">{item.label}</span>
+              <IconComponent className="w-5 h-5 mb-0.5" />
+              <span className="text-xs font-medium leading-tight">{item.label}</span>
             </button>
           );
         })}
