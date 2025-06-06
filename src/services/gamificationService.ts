@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface UserProgress {
@@ -126,6 +125,69 @@ const ACHIEVEMENTS: Achievement[] = [
 
 export class GamificationService {
   /**
+   * Reset user progress to correct amount based on achievements
+   */
+  static async resetUserProgressToCorrectAmount(userId: string): Promise<ProgressResponse> {
+    try {
+      const progressResult = await this.getUserProgress(userId);
+      if (!progressResult.success || !progressResult.progress) {
+        return { success: false, error: 'Failed to get user progress' };
+      }
+
+      const currentProgress = progressResult.progress;
+      const unlockedAchievements = currentProgress.achievements || [];
+      
+      // Calculate correct total points based on unlocked achievements
+      let correctTotalPoints = 0;
+      for (const achievementId of unlockedAchievements) {
+        const achievement = ACHIEVEMENTS.find(a => a.id === achievementId);
+        if (achievement) {
+          correctTotalPoints += achievement.points;
+        }
+      }
+
+      // Add points for daily scans (more conservative approach)
+      // We'll only count unique scan days from scan_summary
+      const { data: scanData, error: scanError } = await supabase
+        .from('scan_summary')
+        .select('scan_date')
+        .eq('user_id', userId);
+
+      if (!scanError && scanData) {
+        const uniqueScanDays = new Set(scanData.map(s => s.scan_date)).size;
+        // Award 10 points per unique scan day (conservative estimate)
+        correctTotalPoints += uniqueScanDays * 10;
+      }
+
+      console.log(`Resetting points from ${currentProgress.total_points} to ${correctTotalPoints}`);
+      
+      const newLevel = this._calculateLevel(correctTotalPoints);
+      const levelProgress = this._calculateLevelProgress(correctTotalPoints);
+
+      // Update progress with correct amounts
+      const { error: updateError } = await supabase
+        .from('user_progress')
+        .update({
+          total_points: correctTotalPoints,
+          feeding_level: newLevel.name,
+          level_progress: levelProgress
+        })
+        .eq('user_id', userId);
+
+      if (updateError) {
+        console.error('GamificationService: Error resetting progress:', updateError);
+        return { success: false, error: updateError.message };
+      }
+
+      // Fetch updated progress
+      return await this.getUserProgress(userId);
+    } catch (error: any) {
+      console.error('GamificationService: Unexpected error resetting progress:', error);
+      return { success: false, error: error.message || 'Failed to reset progress' };
+    }
+  }
+
+  /**
    * Initialize user progress
    */
   static async initializeUserProgress(userId: string): Promise<ProgressResponse> {
@@ -191,7 +253,7 @@ export class GamificationService {
     try {
       const today = new Date().toISOString().split('T')[0];
       
-      // Check scan_summary for scan actions
+      // For scan actions, check scan_summary
       if (action === 'scan_performed') {
         const { data, error } = await supabase
           .from('scan_summary')
@@ -208,19 +270,7 @@ export class GamificationService {
         return data ? data.scan_count > 0 : false;
       }
 
-      // For other actions, check user_progress last_activity_date
-      const { data, error } = await supabase
-        .from('user_progress')
-        .select('last_activity_date')
-        .eq('user_id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error checking last activity:', error);
-        return false;
-      }
-
-      return data?.last_activity_date === today;
+      return false;
     } catch (error) {
       console.error('Error checking action status:', error);
       return false;
@@ -228,7 +278,7 @@ export class GamificationService {
   }
 
   /**
-   * Award points for specific actions with duplicate prevention
+   * Award points for specific actions with strict duplicate prevention
    */
   static async awardPoints(
     userId: string, 
@@ -237,11 +287,13 @@ export class GamificationService {
     checkAchievements = true
   ): Promise<AchievementResponse> {
     try {
-      // Prevent duplicate point awards for daily actions
+      console.log(`GamificationService: Attempting to award ${points} points for ${action}`);
+
+      // Strict duplicate prevention for scan actions
       if (action === 'scan_performed') {
         const hasScannedToday = await this.hasPerformedActionToday(userId, action);
         if (hasScannedToday) {
-          console.log('User already received points for scanning today');
+          console.log('GamificationService: User already received points for scanning today, skipping');
           return { success: true, newAchievements: [] };
         }
       }
@@ -271,9 +323,8 @@ export class GamificationService {
         } else if (daysDiff > 1) {
           newStreak = 1;
         } else if (daysDiff === 0) {
-          // Same day, don't change streak but don't award points again
-          console.log('Same day scan, maintaining streak but not awarding duplicate points');
-          return { success: true, newAchievements: [] };
+          // Same day, don't change streak
+          console.log('GamificationService: Same day scan, maintaining streak');
         }
 
         longestStreak = Math.max(currentProgress.longest_streak, newStreak);
@@ -297,6 +348,8 @@ export class GamificationService {
         return { success: false, error: updateError.message };
       }
 
+      console.log(`GamificationService: Successfully awarded ${points} points for ${action}. Total: ${newTotalPoints}`);
+
       // Check for new achievements
       let newAchievements: Achievement[] = [];
       if (checkAchievements) {
@@ -306,7 +359,6 @@ export class GamificationService {
         }
       }
 
-      console.log(`Awarded ${points} points for ${action}. Total: ${newTotalPoints}`);
       return { success: true, newAchievements };
     } catch (error: any) {
       console.error('GamificationService: Unexpected error awarding points:', error);

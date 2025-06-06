@@ -50,6 +50,37 @@ export const useGamification = () => {
     fetchAchievements();
   }, [fetchProgress, fetchAchievements]);
 
+  // Reset progress to correct amount based on achievements
+  const resetProgress = async () => {
+    if (!user) return;
+
+    try {
+      console.log('Resetting progress to correct amount...');
+      const result = await GamificationService.resetUserProgressToCorrectAmount(user.id);
+      if (result.success) {
+        await fetchProgress();
+        toast({
+          title: "Progress Reset",
+          description: "Your points have been corrected based on your actual achievements.",
+        });
+      } else {
+        console.error('Failed to reset progress:', result.error);
+        toast({
+          title: "Error",
+          description: "Failed to reset progress. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error resetting progress:', error);
+      toast({
+        title: "Error",
+        description: "An error occurred while resetting progress.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const awardPoints = async (action: 'scan' | 'recipe' | 'newFood' | 'profile') => {
     if (!user) return;
 
@@ -114,6 +145,7 @@ export const useGamification = () => {
     awardPoints,
     dismissAchievement,
     clearNewAchievements,
+    resetProgress,
     refetch: fetchProgress
   };
 };

@@ -15,7 +15,7 @@ import { AchievementsModal } from './AchievementsModal';
 import { useGamification } from '@/hooks/useGamification';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { Award } from 'lucide-react';
+import { Award, RotateCcw } from 'lucide-react';
 
 export const Homepage = () => {
   const { user, signOut } = useAuth();
@@ -32,7 +32,8 @@ export const Homepage = () => {
     newAchievements, 
     loading: gamificationLoading,
     awardPoints,
-    dismissAchievement
+    dismissAchievement,
+    resetProgress
   } = useGamification();
 
   useEffect(() => {
@@ -40,6 +41,24 @@ export const Homepage = () => {
       fetchBabyProfile();
     }
   }, [user]);
+
+  // Auto-reset points if there's a major discrepancy
+  useEffect(() => {
+    if (progress && achievements.length > 0) {
+      const unlockedAchievements = achievements.filter(a => a.unlocked);
+      const expectedPoints = unlockedAchievements.reduce((total, achievement) => total + achievement.points, 0);
+      
+      // If the difference is more than 1000 points, suggest a reset
+      if (progress.total_points - expectedPoints > 1000) {
+        console.log(`Large discrepancy detected: ${progress.total_points} actual vs ${expectedPoints} expected`);
+        toast({
+          title: "Points Discrepancy Detected",
+          description: "Your points seem incorrect. Click the reset button to fix this.",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [progress, achievements]);
 
   const fetchBabyProfile = async () => {
     try {
@@ -192,8 +211,16 @@ export const Homepage = () => {
           <button
             onClick={() => setShowAchievements(true)}
             className="p-2 rounded-full bg-yellow-100 hover:bg-yellow-200 transition-colors"
+            title="View Achievements"
           >
             <Award className="w-5 h-5 text-yellow-600" />
+          </button>
+          <button
+            onClick={resetProgress}
+            className="p-2 rounded-full bg-red-100 hover:bg-red-200 transition-colors"
+            title="Reset Points (Fix Discrepancy)"
+          >
+            <RotateCcw className="w-5 h-5 text-red-600" />
           </button>
           <HeaderMenu
             language={language}
