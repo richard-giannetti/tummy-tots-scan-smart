@@ -1,12 +1,12 @@
 
 import React, { useState } from 'react';
-import { Search, ArrowLeft, Camera, ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { ScanService } from '@/services/scanService';
-import { ROUTES } from '@/constants/app';
 import { toast } from '@/hooks/use-toast';
+import SearchHeader from '@/components/SearchHeader';
+import SearchForm from '@/components/SearchForm';
+import SearchResults from '@/components/SearchResults';
+import SearchTips from '@/components/SearchTips';
 
 interface SearchResultProduct {
   code: string;
@@ -24,14 +24,6 @@ const SearchScreen = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResultProduct[]>([]);
   const [showResults, setShowResults] = useState(false);
-
-  const handleBackClick = () => {
-    navigate(ROUTES.HOME);
-  };
-
-  const handleScanInstead = () => {
-    navigate('/scan');
-  };
 
   const handleProductSelect = async (product: SearchResultProduct) => {
     try {
@@ -214,197 +206,35 @@ const SearchScreen = () => {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
-      {/* Header with back button */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-md mx-auto px-4 py-4 flex items-center">
-          <button
-            onClick={handleBackClick}
-            className="flex items-center text-gray-600 hover:text-gray-800 mr-4"
-            aria-label="Go back to homepage"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <h1 className="text-xl font-bold text-gray-800">Search Food</h1>
-        </div>
-      </header>
+      <SearchHeader />
 
       {/* Main Content */}
       <main className="max-w-md mx-auto px-4 py-8">
         <div className="space-y-6">
-          {/* Search Icon and Title */}
-          <div className="text-center space-y-4">
-            <div className="w-24 h-24 bg-gradient-to-br from-pink-200 to-purple-200 rounded-full mx-auto flex items-center justify-center">
-              <Search className="w-12 h-12 text-pink-600" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Search Baby Food</h2>
-              <p className="text-gray-600">
-                Enter the name, barcode, or any details about the food product you want to check
-              </p>
-            </div>
-          </div>
-
-          {/* Search Form */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="search" className="text-sm font-medium text-gray-700">
-                Food Product Search
-              </label>
-              <Input
-                id="search"
-                type="text"
-                placeholder="e.g., apple puree, baby cereal, 1234567890..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="text-lg py-6"
-                disabled={isSearching}
-              />
-            </div>
-            
-            <Button
-              onClick={handleSearch}
-              disabled={!searchQuery.trim() || isSearching}
-              className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white py-6 text-lg font-semibold rounded-xl"
-            >
-              {isSearching ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Searching...</span>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <Search className="w-6 h-6" />
-                  <span>Search Food</span>
-                </div>
-              )}
-            </Button>
-
-            {/* Secondary Scan Button */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">or</span>
-              </div>
-            </div>
-            
-            <Button
-              onClick={handleScanInstead}
-              variant="outline"
-              className="w-full py-4 text-gray-600 border-gray-300 hover:bg-gray-50 hover:text-gray-800 transition-colors"
-            >
-              <Camera className="w-5 h-5 mr-2" />
-              Scan Barcode Instead
-            </Button>
-          </div>
+          <SearchForm
+            searchQuery={searchQuery}
+            isSearching={isSearching}
+            onSearchQueryChange={setSearchQuery}
+            onSearch={handleSearch}
+          />
 
           {/* Search Results */}
-          {showResults && searchResults.length > 0 && (
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <h3 className="font-semibold text-gray-800 mb-4">Search Results</h3>
-              <div className="space-y-3">
-                {searchResults.map((product, index) => (
-                  <button
-                    key={`${product.code}-${index}`}
-                    onClick={() => handleProductSelect(product)}
-                    disabled={isSearching}
-                    className="w-full p-4 border border-gray-200 rounded-lg hover:border-pink-300 hover:bg-pink-50 transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <div className="flex items-start space-x-3">
-                      {/* Product Image */}
-                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
-                        {(product.image_front_url || product.image_url) ? (
-                          <img 
-                            src={product.image_front_url || product.image_url} 
-                            alt={product.product_name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <ShoppingCart className="w-6 h-6 text-gray-400" />
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Product Info */}
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 truncate">
-                          {product.product_name}
-                        </h4>
-                        {product.brands && (
-                          <p className="text-sm text-gray-600 truncate">
-                            {product.brands}
-                          </p>
-                        )}
-                        <div className="flex items-center space-x-2 mt-1">
-                          {product.nutriscore_grade && (
-                            <span className={`inline-block w-6 h-6 rounded text-white text-xs font-bold text-center leading-6 ${
-                              product.nutriscore_grade.toLowerCase() === 'a' ? 'bg-green-500' :
-                              product.nutriscore_grade.toLowerCase() === 'b' ? 'bg-yellow-500' :
-                              product.nutriscore_grade.toLowerCase() === 'c' ? 'bg-orange-500' :
-                              product.nutriscore_grade.toLowerCase() === 'd' ? 'bg-red-500' :
-                              'bg-red-700'
-                            }`}>
-                              {product.nutriscore_grade.toUpperCase()}
-                            </span>
-                          )}
-                          {product.nova_group && (
-                            <span className="text-xs text-gray-500">
-                              NOVA {product.nova_group}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
+          {showResults && (
+            <SearchResults
+              searchResults={searchResults}
+              isSearching={isSearching}
+              onProductSelect={handleProductSelect}
+            />
           )}
 
-          {/* Search Tips */}
+          {/* Search Tips and Popular Searches */}
           {!showResults && (
-            <>
-              <div className="bg-blue-50 rounded-2xl p-4">
-                <h3 className="font-semibold text-blue-800 mb-2">Search Tips</h3>
-                <ul className="text-sm text-blue-700 space-y-1">
-                  <li>• Try product names like "apple puree" or "baby cereal"</li>
-                  <li>• Enter barcode numbers for exact matches</li>
-                  <li>• Search by brand names like "Gerber" or "Earth's Best"</li>
-                  <li>• Include keywords like "organic" or "baby food"</li>
-                </ul>
-              </div>
-
-              {/* Recent Searches */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm">
-                <h3 className="font-semibold text-gray-800 mb-3">Popular Searches</h3>
-                <div className="space-y-2">
-                  {['Apple puree baby food', 'Organic rice cereal', 'Banana baby food', 'Sweet potato puree'].map((item, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSearchQuery(item)}
-                      className="w-full text-left px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg text-sm transition-colors"
-                      disabled={isSearching}
-                    >
-                      {item}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </>
+            <SearchTips
+              isSearching={isSearching}
+              onQuickSearch={setSearchQuery}
+            />
           )}
         </div>
       </main>
