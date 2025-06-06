@@ -474,7 +474,12 @@ export class ScanService {
         return null;
       }
 
-      return data?.product_data as ProductData || null;
+      // Type-safe conversion from JSON to ProductData
+      if (data?.product_data && typeof data.product_data === 'object') {
+        return data.product_data as ProductData;
+      }
+
+      return null;
     } catch (error) {
       console.error('Error reading cache:', error);
       return null;
@@ -483,11 +488,14 @@ export class ScanService {
 
   private static async _cacheResult(barcode: string, data: ProductData): Promise<void> {
     try {
+      // Convert ProductData to JSON-compatible object
+      const jsonData = JSON.parse(JSON.stringify(data));
+      
       await supabase
         .from('product_cache')
         .upsert({
           barcode,
-          product_data: data,
+          product_data: jsonData,
           api_source: 'open_food_facts',
           expires_at: new Date(Date.now() + this.CACHE_DURATION).toISOString()
         });
