@@ -475,8 +475,8 @@ export class ScanService {
       }
 
       // Type-safe conversion from JSON to ProductData
-      if (data?.product_data && typeof data.product_data === 'object') {
-        return data.product_data as ProductData;
+      if (data?.product_data && typeof data.product_data === 'object' && !Array.isArray(data.product_data)) {
+        return data.product_data as unknown as ProductData;
       }
 
       return null;
