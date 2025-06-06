@@ -70,6 +70,8 @@ const ScanScreen = () => {
 
   const handleLoadingComplete = async () => {
     try {
+      console.log('Processing barcode:', scannedCode);
+      
       // Try to get real product data from Open Food Facts
       const productData = await ScanService.getProductByBarcode(scannedCode);
       
@@ -78,6 +80,11 @@ const ScanScreen = () => {
         // Calculate score for real product
         scanResult = ScanService.calculateHealthyTummiesScore(productData, 8); // Default 8 months
         console.log('Real product found and analyzed:', scanResult);
+        
+        toast({
+          title: "Product Found!",
+          description: `Analyzed ${productData.productName}`,
+        });
       } else {
         // Fall back to mock data if product not found
         scanResult = ScanService.generateMockScanResult();
@@ -89,8 +96,8 @@ const ScanScreen = () => {
         });
       }
       
-      // Record the scan
-      await recordScan(scanResult.healthyTummiesScore);
+      // Record the scan with enhanced data
+      await recordScan(scanResult, scannedCode);
       
       // Navigate to scan result screen with the result data
       navigate('/scan-result', { 
@@ -114,8 +121,11 @@ const ScanScreen = () => {
     setIsLoading(true);
   };
 
-  const handleTestLoadingComplete = () => {
+  const handleTestLoadingComplete = async () => {
     const mockResult = ScanService.generateMockScanResult();
+    
+    // Record the mock scan
+    await recordScan(mockResult);
     
     toast({
       title: MESSAGES.SCAN.TEST_COMPLETE,

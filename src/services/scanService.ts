@@ -18,6 +18,8 @@ export interface ProductData {
   brand?: string;
   imageUrl?: string;
   nutriScore?: string;
+  novaScore?: number;
+  ecoScore?: string;
   nutritionalValues: {
     energy?: number;
     sugar?: number;
@@ -30,7 +32,6 @@ export interface ProductData {
   allergens?: string[];
   additives?: string[];
   categories?: string[];
-  novaGroup?: number;
 }
 
 export interface ScanResult {
@@ -46,6 +47,12 @@ export interface ScanResult {
   recommendations: string[];
   ageAppropriate: boolean;
   warnings: string[];
+  openFoodFactsData: {
+    nutriScore?: string;
+    novaScore?: number;
+    ecoScore?: string;
+    attribution: string;
+  };
 }
 
 /**
@@ -53,7 +60,8 @@ export interface ScanResult {
  */
 export class ScanService {
   private static BASE_URL = 'https://world.openfoodfacts.org/api/v2/product/';
-  private static CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+  private static CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
+  private static REQUEST_TIMEOUT = 15000; // 15 seconds
 
   /**
    * Get product data from Open Food Facts API
@@ -70,22 +78,38 @@ export class ScanService {
       }
       
       // Check cache first
-      const cached = this._getCachedResult(cleanBarcode);
+      const cached = await this._getCachedResult(cleanBarcode);
       if (cached) {
         console.log('ScanService: Using cached result');
         return cached;
       }
 
-      const response = await fetch(`${this.BASE_URL}${cleanBarcode}.json`);
+      // Build API URL with required parameters
+      const apiUrl = `${this.BASE_URL}${cleanBarcode}?lc=en&fields=product_name,brands,nutriscore_grade,nova_group,ecoscore_grade,nutriments,ingredients_text,image_url,image_front_url,image_nutrition_url`;
+      
+      console.log('ScanService: Making API request to:', apiUrl);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.REQUEST_TIMEOUT);
+
+      const response = await fetch(apiUrl, {
+        headers: {
+          'User-Agent': 'HealthyTummies/1.0 (hello@healthy-tummies.com)',
+          'Accept': 'application/json',
+        },
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
-        console.error('ScanService: API request failed:', response.status);
+        console.error('ScanService: API request failed:', response.status, response.statusText);
         return null;
       }
 
       const data = await response.json();
       
-      if (data.status === 0) {
+      if (data.status === 0 || !data.product) {
         console.log('ScanService: Product not found in Open Food Facts database');
         return null;
       }
@@ -94,12 +118,16 @@ export class ScanService {
       productData.barcode = cleanBarcode;
       
       // Cache the result
-      this._cacheResult(cleanBarcode, productData);
+      await this._cacheResult(cleanBarcode, productData);
       
       console.log('ScanService: Product data fetched successfully:', productData.productName);
       return productData;
     } catch (error: any) {
-      console.error('ScanService: Error fetching product:', error);
+      if (error.name === 'AbortError') {
+        console.error('ScanService: Request timeout');
+      } else {
+        console.error('ScanService: Error fetching product:', error);
+      }
       return null;
     }
   }
@@ -135,20 +163,57 @@ export class ScanService {
       breakdown,
       recommendations: this._generateRecommendations(finalScore, babyAge),
       ageAppropriate: finalScore >= 60 && babyAge >= 6,
-      warnings: this._generateWarnings(productData, babyAge)
+      warnings: this._generateWarnings(productData, babyAge),
+      openFoodFactsData: {
+        nutriScore: productData.nutriScore,
+        novaScore: productData.novaScore,
+        ecoScore: productData.ecoScore,
+        attribution: "Data from Open Food Facts"
+      }
     };
   }
 
   /**
-   * Record a scan in the user's tracking data
+   * Record a scan in the user's tracking data with Open Food Facts data
    */
-  static async recordScan(userId: string, score?: number): Promise<ScanResponse> {
+  static async recordScan(
+    userId: string, 
+    scanResult?: ScanResult,
+    barcode?: string
+  ): Promise<ScanResponse> {
     try {
-      console.log('ScanService: Recording scan for user:', userId, 'with score:', score);
+      console.log('ScanService: Recording scan for user:', userId);
       
+      let nutritionalData = null;
+      let imageUrls = null;
+
+      if (scanResult) {
+        nutritionalData = {
+          energy: scanResult.product.nutritionalValues.energy,
+          sugar: scanResult.product.nutritionalValues.sugar,
+          salt: scanResult.product.nutritionalValues.salt,
+          saturatedFat: scanResult.product.nutritionalValues.saturatedFat,
+          fiber: scanResult.product.nutritionalValues.fiber,
+          protein: scanResult.product.nutritionalValues.protein,
+        };
+
+        imageUrls = {
+          front: scanResult.product.imageUrl,
+        };
+      }
+
       const { error } = await supabase.rpc('update_scan_tracking', {
         user_uuid: userId,
-        scan_score: score || null
+        scan_score: scanResult?.healthyTummiesScore || null,
+        product_barcode: barcode || scanResult?.product.barcode || null,
+        product_name_param: scanResult?.product.productName || null,
+        brand_param: scanResult?.product.brand || null,
+        nutri_score_param: scanResult?.openFoodFactsData.nutriScore || null,
+        nova_score_param: scanResult?.openFoodFactsData.novaScore || null,
+        eco_score_param: scanResult?.openFoodFactsData.ecoScore || null,
+        nutritional_data_param: nutritionalData,
+        ingredients_param: scanResult?.product.ingredients || null,
+        image_urls_param: imageUrls,
       });
 
       if (error) {
@@ -172,8 +237,10 @@ export class ScanService {
       {
         productName: 'Organic Baby Oats',
         brand: 'Happy Baby',
-        imageUrl: '/placeholder.svg',
+        imageUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=800&h=600&fit=crop',
         nutriScore: 'A',
+        novaScore: 1,
+        ecoScore: 'A',
         nutritionalValues: {
           energy: 380,
           sugar: 1.2,
@@ -186,13 +253,14 @@ export class ScanService {
         allergens: [],
         additives: [],
         categories: ['baby-food', 'cereals'],
-        novaGroup: 1
       },
       {
         productName: 'Fruit Puree Pouch',
         brand: 'Gerber',
-        imageUrl: '/placeholder.svg',
+        imageUrl: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=800&h=600&fit=crop',
         nutriScore: 'B',
+        novaScore: 2,
+        ecoScore: 'B',
         nutritionalValues: {
           energy: 65,
           sugar: 12.5,
@@ -205,7 +273,6 @@ export class ScanService {
         allergens: [],
         additives: ['vitamin-c'],
         categories: ['baby-food', 'fruit-purees'],
-        novaGroup: 2
       }
     ];
 
@@ -247,8 +314,10 @@ export class ScanService {
     return {
       productName: product.product_name || product.product_name_en || 'Unknown Product',
       brand: product.brands || '',
-      imageUrl: product.image_front_url || product.image_url || '/placeholder.svg',
+      imageUrl: product.image_front_url || product.image_url || 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=800&h=600&fit=crop',
       nutriScore: product.nutriscore_grade?.toUpperCase(),
+      novaScore: product.nova_group,
+      ecoScore: product.ecoscore_grade?.toUpperCase(),
       nutritionalValues: {
         energy: product.nutriments?.['energy-kcal_100g'],
         sugar: product.nutriments?.sugars_100g,
@@ -261,7 +330,6 @@ export class ScanService {
       allergens: product.allergens_tags || [],
       additives: product.additives_tags || [],
       categories: product.categories_tags || [],
-      novaGroup: product.nova_group
     };
   }
 
@@ -392,27 +460,37 @@ export class ScanService {
     return warnings;
   }
 
-  private static _getCachedResult(barcode: string): ProductData | null {
+  private static async _getCachedResult(barcode: string): Promise<ProductData | null> {
     try {
-      const cached = localStorage.getItem(`scan_${barcode}`);
-      if (cached) {
-        const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < this.CACHE_DURATION) {
-          return data;
-        }
+      const { data, error } = await supabase
+        .from('product_cache')
+        .select('product_data')
+        .eq('barcode', barcode)
+        .gt('expires_at', new Date().toISOString())
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error reading cache:', error);
+        return null;
       }
+
+      return data?.product_data as ProductData || null;
     } catch (error) {
       console.error('Error reading cache:', error);
+      return null;
     }
-    return null;
   }
 
-  private static _cacheResult(barcode: string, data: ProductData): void {
+  private static async _cacheResult(barcode: string, data: ProductData): Promise<void> {
     try {
-      localStorage.setItem(`scan_${barcode}`, JSON.stringify({
-        data,
-        timestamp: Date.now()
-      }));
+      await supabase
+        .from('product_cache')
+        .upsert({
+          barcode,
+          product_data: data,
+          api_source: 'open_food_facts',
+          expires_at: new Date(Date.now() + this.CACHE_DURATION).toISOString()
+        });
     } catch (error) {
       console.error('Error caching result:', error);
     }

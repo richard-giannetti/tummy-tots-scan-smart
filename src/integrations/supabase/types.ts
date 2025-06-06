@@ -155,6 +155,33 @@ export type Database = {
           },
         ]
       }
+      product_cache: {
+        Row: {
+          api_source: string | null
+          barcode: string
+          cached_at: string
+          expires_at: string
+          id: string
+          product_data: Json
+        }
+        Insert: {
+          api_source?: string | null
+          barcode: string
+          cached_at?: string
+          expires_at?: string
+          id?: string
+          product_data: Json
+        }
+        Update: {
+          api_source?: string | null
+          barcode?: string
+          cached_at?: string
+          expires_at?: string
+          id?: string
+          product_data?: Json
+        }
+        Relationships: []
+      }
       recipes: {
         Row: {
           _id: string | null
@@ -190,25 +217,55 @@ export type Database = {
       }
       scan_summary: {
         Row: {
+          api_source: string | null
           average_score: number | null
+          barcode: string | null
+          brand: string | null
           created_at: string | null
+          eco_score: string | null
           id: string
+          image_urls: Json | null
+          ingredients_text: string | null
+          nova_score: number | null
+          nutri_score: string | null
+          nutritional_data: Json | null
+          product_name: string | null
           scan_count: number | null
           scan_date: string
           user_id: string
         }
         Insert: {
+          api_source?: string | null
           average_score?: number | null
+          barcode?: string | null
+          brand?: string | null
           created_at?: string | null
+          eco_score?: string | null
           id?: string
+          image_urls?: Json | null
+          ingredients_text?: string | null
+          nova_score?: number | null
+          nutri_score?: string | null
+          nutritional_data?: Json | null
+          product_name?: string | null
           scan_count?: number | null
           scan_date?: string
           user_id: string
         }
         Update: {
+          api_source?: string | null
           average_score?: number | null
+          barcode?: string | null
+          brand?: string | null
           created_at?: string | null
+          eco_score?: string | null
           id?: string
+          image_urls?: Json | null
+          ingredients_text?: string | null
+          nova_score?: number | null
+          nutri_score?: string | null
+          nutritional_data?: Json | null
+          product_name?: string | null
           scan_count?: number | null
           scan_date?: string
           user_id?: string
@@ -315,12 +372,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_product_cache: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       cleanup_old_scan_summaries: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
       update_scan_tracking: {
-        Args: { user_uuid: string; scan_score?: number }
+        Args:
+          | { user_uuid: string; scan_score?: number }
+          | {
+              user_uuid: string
+              scan_score?: number
+              product_barcode?: string
+              product_name_param?: string
+              brand_param?: string
+              nutri_score_param?: string
+              nova_score_param?: number
+              eco_score_param?: string
+              nutritional_data_param?: Json
+              ingredients_param?: string
+              image_urls_param?: Json
+            }
         Returns: undefined
       }
     }

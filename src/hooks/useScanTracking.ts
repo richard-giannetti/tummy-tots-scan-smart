@@ -1,14 +1,14 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
-import { ScanService } from '@/services/scanService';
+import { ScanService, ScanResult } from '@/services/scanService';
 import { useGamification } from '@/hooks/useGamification';
 
 export const useScanTracking = () => {
   const { user } = useAuth();
   const { awardPoints } = useGamification();
 
-  const recordScan = async (score?: number) => {
+  const recordScan = async (scanResult?: ScanResult, barcode?: string) => {
     if (!user) {
       console.error('User not authenticated');
       toast({
@@ -19,7 +19,7 @@ export const useScanTracking = () => {
       return;
     }
 
-    const result = await ScanService.recordScan(user.id, score);
+    const result = await ScanService.recordScan(user.id, scanResult, barcode);
     
     if (!result.success) {
       toast({

@@ -27,9 +27,9 @@ const ScanResultScreen = () => {
     setScanResult(result);
     setLoading(false);
 
-    // Record the scan
-    if (result) {
-      recordScan(result.healthyTummiesScore);
+    // Record the scan if no result was passed (for direct navigation)
+    if (!location.state?.scanResult && result) {
+      recordScan(result);
     }
   }, [location.state, recordScan]);
 
@@ -89,11 +89,11 @@ const ScanResultScreen = () => {
       {/* Header with Product Image */}
       <div className="relative">
         <img 
-          src="https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=800&h=600&fit=crop"
+          src={scanResult.product.imageUrl || "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=800&h=600&fit=crop"}
           alt={scanResult.product.productName}
           className="w-full h-64 object-cover"
           onError={(e) => {
-            (e.target as HTMLImageElement).src = '/placeholder.svg';
+            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=800&h=600&fit=crop';
           }}
         />
         <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/50 to-transparent p-4">
@@ -130,9 +130,9 @@ const ScanResultScreen = () => {
                 <div className="text-3xl font-bold">{scanResult.healthyTummiesScore}</div>
                 <div className="text-sm opacity-90">/ 100</div>
               </div>
-              {scanResult.product.nutriScore && (
+              {scanResult.openFoodFactsData.nutriScore && (
                 <div className="absolute -top-2 -right-2 bg-white text-black px-2 py-1 rounded-full text-xs font-bold">
-                  {scanResult.product.nutriScore}
+                  {scanResult.openFoodFactsData.nutriScore}
                 </div>
               )}
             </div>
@@ -143,6 +143,13 @@ const ScanResultScreen = () => {
               {getScoreMessage(scanResult.healthyTummiesScore, scanResult.product.productName)}
             </p>
             
+            {/* AI Analysis Disclaimer */}
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-4">
+              <p className="text-xs text-purple-700">
+                <strong>Healthy Tummies Score</strong> uses AI analysis specifically tailored to your baby's nutritional profile
+              </p>
+            </div>
+
             {/* Social Proofing Badge */}
             <div className="flex justify-center mb-4">
               <Badge 
@@ -173,6 +180,49 @@ const ScanResultScreen = () => {
           </CardContent>
         </Card>
 
+        {/* Open Food Facts Scores Section */}
+        <Card className="border-blue-200 bg-blue-50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-blue-800 flex items-center text-sm">
+              <Info className="w-4 h-4 mr-2" />
+              Additional Nutrition Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-3 mb-3">
+              {scanResult.openFoodFactsData.nutriScore && (
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center mx-auto mb-1">
+                    <span className="font-bold text-lg">{scanResult.openFoodFactsData.nutriScore}</span>
+                  </div>
+                  <p className="text-xs text-blue-700">Nutri-Score</p>
+                </div>
+              )}
+              
+              {scanResult.openFoodFactsData.novaScore && (
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center mx-auto mb-1">
+                    <span className="font-bold text-lg">{scanResult.openFoodFactsData.novaScore}</span>
+                  </div>
+                  <p className="text-xs text-blue-700">NOVA Score</p>
+                </div>
+              )}
+              
+              {scanResult.openFoodFactsData.ecoScore && (
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center mx-auto mb-1">
+                    <span className="font-bold text-lg">{scanResult.openFoodFactsData.ecoScore}</span>
+                  </div>
+                  <p className="text-xs text-blue-700">Eco-Score</p>
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-blue-600 text-center">
+              {scanResult.openFoodFactsData.attribution}
+            </p>
+          </CardContent>
+        </Card>
+
         {/* Warnings Section */}
         {scanResult.warnings.length > 0 && (
           <Card className="border-orange-200 bg-orange-50">
@@ -195,7 +245,7 @@ const ScanResultScreen = () => {
           </Card>
         )}
 
-        {/* Detailed Breakdown */}
+        {/* Detailed Breakdown - Enhanced with real data */}
         <div className="space-y-4">
           {/* Sugar Analysis */}
           <Collapsible>
