@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Search, ArrowLeft } from 'lucide-react';
+import { Search, ArrowLeft, Camera } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,10 @@ const SearchScreen = () => {
 
   const handleBackClick = () => {
     navigate(ROUTES.HOME);
+  };
+
+  const handleScanInstead = () => {
+    navigate('/scan');
   };
 
   const handleSearch = async () => {
@@ -217,6 +220,25 @@ const SearchScreen = () => {
                   <span>Search Food</span>
                 </div>
               )}
+            </Button>
+
+            {/* Secondary Scan Button */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">or</span>
+              </div>
+            </div>
+            
+            <Button
+              onClick={handleScanInstead}
+              variant="outline"
+              className="w-full py-4 text-gray-600 border-gray-300 hover:bg-gray-50 hover:text-gray-800 transition-colors"
+            >
+              <Camera className="w-5 h-5 mr-2" />
+              Scan Barcode Instead
             </Button>
           </div>
 
