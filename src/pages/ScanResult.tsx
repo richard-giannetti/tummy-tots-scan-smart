@@ -2,21 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { type ScanResult as ScanResultType } from '@/services/scanService';
-import { ArrowLeft, Camera, AlertTriangle, Lightbulb, Package, Share2, MessageSquare, Info } from 'lucide-react';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+import { ArrowLeft, Camera, AlertTriangle, Lightbulb, Package, Share2, Info, Star, MessageSquare } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
+import { ShareModal } from '@/components/ShareModal';
+import { ReviewsModal } from '@/components/ReviewsModal';
 
 const ScanResult = () => {
   const location = useLocation();
@@ -77,6 +71,11 @@ const ScanResult = () => {
     }
   };
 
+  // Generate share URL for the current scan result
+  const generateShareUrl = () => {
+    return `${window.location.origin}/scan-result?product=${encodeURIComponent(scanResult?.product.productName || '')}`;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
       {/* Header */}
@@ -89,18 +88,12 @@ const ScanResult = () => {
             <ArrowLeft className="w-6 h-6" />
           </button>
           <h1 className="text-xl font-bold text-gray-800">Scan Result</h1>
-          <div className="ml-auto flex space-x-2">
+          <div className="ml-auto">
             <button
               onClick={() => setShowShareModal(true)}
               className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <Share2 className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setShowReviewsModal(true)}
-              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <MessageSquare className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -147,6 +140,28 @@ const ScanResult = () => {
                 <p className="text-gray-600 text-sm max-w-sm mx-auto">
                   {scanResult.primaryMessage}
                 </p>
+              </div>
+
+              {/* Reviews Call-to-Action */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Star className="w-5 h-5 text-blue-500" />
+                    <div>
+                      <p className="text-sm font-medium text-blue-800">See Parent Reviews</p>
+                      <p className="text-xs text-blue-600">Read what other parents think about this product</p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => setShowReviewsModal(true)}
+                    variant="outline"
+                    size="sm"
+                    className="text-blue-600 border-blue-300 hover:bg-blue-100"
+                  >
+                    <MessageSquare className="w-4 h-4 mr-1" />
+                    Reviews
+                  </Button>
+                </div>
               </div>
 
               {/* Detailed Explanations */}
@@ -398,32 +413,23 @@ const ScanResult = () => {
       </main>
 
       {/* Share Modal */}
-      <Sheet open={showShareModal} onOpenChange={setShowShareModal}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Share Product Scan</SheetTitle>
-            <SheetDescription>
-              Share this product scan with your friends and family.
-            </SheetDescription>
-          </SheetHeader>
-          {/* Add sharing options here */}
-          <Button onClick={() => setShowShareModal(false)}>Close</Button>
-        </SheetContent>
-      </Sheet>
+      {scanResult && (
+        <ShareModal
+          open={showShareModal}
+          onOpenChange={setShowShareModal}
+          productName={scanResult.product.productName}
+          shareUrl={generateShareUrl()}
+        />
+      )}
 
       {/* Reviews Modal */}
-      <Sheet open={showReviewsModal} onOpenChange={setShowReviewsModal}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Product Reviews</SheetTitle>
-            <SheetDescription>
-              See what others are saying about this product.
-            </SheetDescription>
-          </SheetHeader>
-          {/* Add reviews or link to reviews here */}
-           <Button onClick={() => setShowReviewsModal(false)}>Close</Button>
-        </SheetContent>
-      </Sheet>
+      {scanResult && (
+        <ReviewsModal
+          open={showReviewsModal}
+          onOpenChange={setShowReviewsModal}
+          productName={scanResult.product.productName}
+        />
+      )}
     </div>
   );
 };
