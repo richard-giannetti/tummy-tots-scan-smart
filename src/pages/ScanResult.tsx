@@ -11,6 +11,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
 
 const ScanResult = () => {
@@ -31,6 +36,45 @@ const ScanResult = () => {
 
   const handleScanAnother = () => {
     navigate('/scan');
+  };
+
+  // Helper function to get emoji for score quality
+  const getScoreEmoji = (score: string, scoreType: 'nutri' | 'nova' | 'eco') => {
+    if (!score || score === 'unknown' || score === 'not-applicable') return '❓';
+    
+    switch (scoreType) {
+      case 'nutri':
+        // Nutri-Score: A is best, E is worst
+        switch (score.toLowerCase()) {
+          case 'a': return '🟢';
+          case 'b': return '🟡';
+          case 'c': return '🟠';
+          case 'd': return '🔴';
+          case 'e': return '🔴';
+          default: return '❓';
+        }
+      case 'nova':
+        // NOVA: 1 is best (unprocessed), 4 is worst (ultra-processed)
+        switch (score) {
+          case '1': return '🟢';
+          case '2': return '🟡';
+          case '3': return '🟠';
+          case '4': return '🔴';
+          default: return '❓';
+        }
+      case 'eco':
+        // Eco-Score: A is best, E is worst
+        switch (score.toLowerCase()) {
+          case 'a': return '🟢';
+          case 'b': return '🟡';
+          case 'c': return '🟠';
+          case 'd': return '🔴';
+          case 'e': return '🔴';
+          default: return '❓';
+        }
+      default:
+        return '❓';
+    }
   };
 
   return (
@@ -233,23 +277,38 @@ const ScanResult = () => {
             <div className="bg-white rounded-2xl p-6 shadow-lg">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-semibold text-gray-800">External Scores</h3>
-                <div className="flex items-center text-xs text-gray-500">
-                  <Info className="w-3 h-3 mr-1" />
-                  <span>Data from Open Food Facts</span>
-                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button className="flex items-center text-gray-400 hover:text-gray-600 transition-colors">
+                      <Info className="w-4 h-4" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 text-sm">
+                    <p>Data from Open Food Facts database</p>
+                  </PopoverContent>
+                </Popover>
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm font-medium text-gray-700">Nutri-Score</p>
-                  <p className="text-xl font-bold text-gray-800">{scanResult.nutriscore}</p>
+                  <div className="flex items-center space-x-1">
+                    <p className="text-xl font-bold text-gray-800">{scanResult.nutriscore}</p>
+                    <span className="text-lg">{getScoreEmoji(scanResult.nutriscore, 'nutri')}</span>
+                  </div>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-700">NOVA Group</p>
-                  <p className="text-xl font-bold text-gray-800">{scanResult.novaGroup}</p>
+                  <div className="flex items-center space-x-1">
+                    <p className="text-xl font-bold text-gray-800">{scanResult.novaGroup}</p>
+                    <span className="text-lg">{getScoreEmoji(scanResult.novaGroup, 'nova')}</span>
+                  </div>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-700">Eco-Score</p>
-                  <p className="text-xl font-bold text-gray-800">{scanResult.ecoscore}</p>
+                  <div className="flex items-center space-x-1">
+                    <p className="text-xl font-bold text-gray-800">{scanResult.ecoscore}</p>
+                    <span className="text-lg">{getScoreEmoji(scanResult.ecoscore, 'eco')}</span>
+                  </div>
                 </div>
               </div>
             </div>
