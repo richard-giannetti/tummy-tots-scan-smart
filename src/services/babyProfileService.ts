@@ -6,8 +6,13 @@ export interface BabyProfile {
   user_id?: string;
   name: string;
   birth_date: string;
+  weight_kg?: number;
+  feeding_stage?: 'exclusive_milk' | 'introducing_solids' | 'mixed_feeding' | 'toddler_food';
   allergies: string[];
   dietary_restrictions: string[];
+  dietary_preferences: string[];
+  health_conditions: string[];
+  feeding_goals: string[];
   feeding_type?: string;
   medical_conditions?: string[];
   avatar_url?: string;
@@ -83,8 +88,13 @@ export class BabyProfileService {
           user_id: user.id,
           name: profileData.name,
           birth_date: profileData.birth_date,
+          weight_kg: profileData.weight_kg,
+          feeding_stage: profileData.feeding_stage,
           allergies: profileData.allergies,
           dietary_restrictions: profileData.dietary_restrictions,
+          dietary_preferences: profileData.dietary_preferences,
+          health_conditions: profileData.health_conditions,
+          feeding_goals: profileData.feeding_goals,
           feeding_type: profileData.feeding_type,
           medical_conditions: profileData.medical_conditions,
           avatar_url: profileData.avatar_url

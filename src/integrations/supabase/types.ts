@@ -15,36 +15,51 @@ export type Database = {
           avatar_url: string | null
           birth_date: string
           created_at: string | null
+          dietary_preferences: string[] | null
           dietary_restrictions: string[] | null
+          feeding_goals: string[] | null
+          feeding_stage: string | null
           feeding_type: string | null
+          health_conditions: string[] | null
           id: string
           medical_conditions: string[] | null
           name: string
           user_id: string
+          weight_kg: number | null
         }
         Insert: {
           allergies?: string[] | null
           avatar_url?: string | null
           birth_date: string
           created_at?: string | null
+          dietary_preferences?: string[] | null
           dietary_restrictions?: string[] | null
+          feeding_goals?: string[] | null
+          feeding_stage?: string | null
           feeding_type?: string | null
+          health_conditions?: string[] | null
           id?: string
           medical_conditions?: string[] | null
           name: string
           user_id: string
+          weight_kg?: number | null
         }
         Update: {
           allergies?: string[] | null
           avatar_url?: string | null
           birth_date?: string
           created_at?: string | null
+          dietary_preferences?: string[] | null
           dietary_restrictions?: string[] | null
+          feeding_goals?: string[] | null
+          feeding_stage?: string | null
           feeding_type?: string | null
+          health_conditions?: string[] | null
           id?: string
           medical_conditions?: string[] | null
           name?: string
           user_id?: string
+          weight_kg?: number | null
         }
         Relationships: [
           {

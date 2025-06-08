@@ -1,506 +1,361 @@
-
-import { supabase } from '@/integrations/supabase/client';
-
-export interface ScanResponse {
-  success: boolean;
-  error?: string;
-}
-
-export interface MockScanResult {
-  score: number;
-  productName: string;
-  recommendations: string[];
-}
-
-export interface ProductData {
-  barcode?: string;
-  productName: string;
-  brand?: string;
-  imageUrl?: string;
-  nutriScore?: string;
-  novaScore?: number;
-  ecoScore?: string;
-  nutritionalValues: {
-    energy?: number;
-    sugar?: number;
-    salt?: number;
-    saturatedFat?: number;
-    fiber?: number;
-    protein?: number;
-  };
-  ingredients?: string;
-  allergens?: string[];
-  additives?: string[];
-  categories?: string[];
-}
+import { HealthyTummiesScoreService, ProductData } from './healthyTummiesScoreService';
+import { BabyProfileService } from './babyProfileService';
 
 export interface ScanResult {
-  product: ProductData;
+  product: {
+    productName: string;
+    brand: string;
+    ingredients: string[];
+    nutritionalInfo: {
+      calories: number;
+      protein: number;
+      carbs: number;
+      fat: number;
+      fiber: number;
+      sodium: number;
+      sugar: number;
+    };
+    allergens: string[];
+    additives: string[];
+    certifications: string[];
+    imageUrl?: string;
+  };
   healthyTummiesScore: number;
+  scoreInterpretation: string;
+  scoreEmoji: string;
+  scoreColor: string;
+  primaryMessage: string;
+  detailedExplanations: string[];
   breakdown: {
-    sugarScore: number;
-    saltScore: number;
-    additivesScore: number;
-    allergenWarnings: string[];
-    nutritionalBenefits: string[];
+    age_appropriateness: number;
+    nutritional_quality: number;
+    safety_processing: number;
+    personalization: number;
+    external_scores: number;
   };
-  recommendations: string[];
+  nutriscore: string;
+  novaGroup: number;
+  ecoscore: string;
   ageAppropriate: boolean;
-  warnings: string[];
-  openFoodFactsData: {
-    nutriScore?: string;
-    novaScore?: number;
-    ecoScore?: string;
-    attribution: string;
-  };
+  recommendations: string[];
+  warningFlags: string[];
 }
 
-/**
- * Service for handling food scanning operations and Open Food Facts API integration
- */
 export class ScanService {
-  private static BASE_URL = 'https://world.openfoodfacts.org/api/v2/product/';
-  private static CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
-  private static REQUEST_TIMEOUT = 15000; // 15 seconds
-
-  /**
-   * Get product data from Open Food Facts API
-   */
-  static async getProductByBarcode(barcode: string): Promise<ProductData | null> {
+  static async getCachedProduct(barcode: string): Promise<any | null> {
     try {
-      console.log('ScanService: Fetching product data for barcode:', barcode);
+      const cacheKey = `product_cache:${barcode}`;
+      const cachedData = localStorage.getItem(cacheKey);
       
-      // Clean and validate barcode
-      const cleanBarcode = barcode.trim().replace(/\D/g, '');
-      if (!cleanBarcode || cleanBarcode.length < 8) {
-        console.log('ScanService: Invalid barcode format');
-        return null;
+      if (cachedData) {
+        const { product, timestamp } = JSON.parse(cachedData);
+        const now = Date.now();
+        const cacheDuration = 7 * 24 * 60 * 60 * 1000; // 7 days
+        
+        if (now - timestamp < cacheDuration) {
+          return product;
+        } else {
+          localStorage.removeItem(cacheKey); // Remove expired cache
+          return null;
+        }
       }
+      return null;
+    } catch (error) {
+      console.error('Error reading from localStorage:', error);
+      return null;
+    }
+  }
+
+  static async cacheProduct(barcode: string, product: any): Promise<void> {
+    try {
+      const cacheKey = `product_cache:${barcode}`;
+      const cacheData = {
+        product: product,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+    } catch (error) {
+      console.error('Error writing to localStorage:', error);
+    }
+  }
+
+  static async getProductByBarcode(barcode: string): Promise<any> {
+    try {
+      console.log(`Fetching product data for barcode: ${barcode}`);
       
       // Check cache first
-      const cached = await this._getCachedResult(cleanBarcode);
+      const cached = await this.getCachedProduct(barcode);
       if (cached) {
-        console.log('ScanService: Using cached result');
+        console.log('Using cached product data');
         return cached;
       }
 
-      // Build API URL with required parameters
-      const apiUrl = `${this.BASE_URL}${cleanBarcode}?lc=en&fields=product_name,brands,nutriscore_grade,nova_group,ecoscore_grade,nutriments,ingredients_text,image_url,image_front_url,image_nutrition_url`;
-      
-      console.log('ScanService: Making API request to:', apiUrl);
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.REQUEST_TIMEOUT);
-
-      const response = await fetch(apiUrl, {
-        headers: {
-          'User-Agent': 'HealthyTummies/1.0 (hello@healthy-tummies.com)',
-          'Accept': 'application/json',
-        },
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        console.error('ScanService: API request failed:', response.status, response.statusText);
-        return null;
-      }
-
+      // Fetch from Open Food Facts
+      const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
       const data = await response.json();
       
-      if (data.status === 0 || !data.product) {
-        console.log('ScanService: Product not found in Open Food Facts database');
+      if (data.status === 1 && data.product) {
+        const product = data.product;
+        console.log('Product found in Open Food Facts:', product.product_name);
+        
+        // Cache the result
+        await this.cacheProduct(barcode, product);
+        
+        return product;
+      } else {
+        console.log('Product not found in Open Food Facts');
         return null;
       }
-
-      const productData = this._formatProductData(data.product);
-      productData.barcode = cleanBarcode;
-      
-      // Cache the result
-      await this._cacheResult(cleanBarcode, productData);
-      
-      console.log('ScanService: Product data fetched successfully:', productData.productName);
-      return productData;
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        console.error('ScanService: Request timeout');
-      } else {
-        console.error('ScanService: Error fetching product:', error);
-      }
+    } catch (error) {
+      console.error('Error fetching product from Open Food Facts:', error);
       return null;
     }
   }
 
-  /**
-   * Calculate Healthy Tummies score based on product data and baby profile
-   */
-  static calculateHealthyTummiesScore(productData: ProductData, babyAge: number): ScanResult {
-    console.log('ScanService: Calculating Healthy Tummies score');
-    
-    // Base score from Nutri-Score
-    let baseScore = this._convertNutriScore(productData.nutriScore);
-    
-    // Age-specific adjustments
-    const ageAdjustments = this._calculateAgeAdjustments(productData, babyAge);
-    
-    // Nutritional penalties and bonuses
-    const nutritionalScore = this._calculateNutritionalScore(productData.nutritionalValues, babyAge);
-    
-    // Additive penalties
-    const additiveScore = this._calculateAdditiveScore(productData.additives || []);
-    
-    // Final score calculation
-    const finalScore = Math.max(0, Math.min(100, 
-      baseScore + ageAdjustments + nutritionalScore + additiveScore
-    ));
-
-    const breakdown = this._generateBreakdown(productData, babyAge);
-    
-    return {
-      product: productData,
-      healthyTummiesScore: Math.round(finalScore),
-      breakdown,
-      recommendations: this._generateRecommendations(finalScore, babyAge),
-      ageAppropriate: finalScore >= 60 && babyAge >= 6,
-      warnings: this._generateWarnings(productData, babyAge),
-      openFoodFactsData: {
-        nutriScore: productData.nutriScore,
-        novaScore: productData.novaScore,
-        ecoScore: productData.ecoScore,
-        attribution: "Data from Open Food Facts"
-      }
-    };
-  }
-
-  /**
-   * Record a scan in the user's tracking data with Open Food Facts data
-   */
-  static async recordScan(
-    userId: string, 
-    scanResult?: ScanResult,
-    barcode?: string
-  ): Promise<ScanResponse> {
+  static async calculateHealthyTummiesScore(productData: any, babyAgeMonths?: number): Promise<ScanResult> {
     try {
-      console.log('ScanService: Recording scan for user:', userId);
+      // Get baby profile for personalized scoring
+      const profileResult = await BabyProfileService.getBabyProfile();
+      const babyProfile = profileResult.profile;
+
+      if (!babyProfile) {
+        console.warn('No baby profile found, using default scoring');
+        // Create a minimal profile for scoring
+        const defaultProfile = {
+          name: 'Baby',
+          birth_date: new Date(Date.now() - (babyAgeMonths || 8) * 30.44 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          allergies: [],
+          dietary_restrictions: [],
+          dietary_preferences: [],
+          health_conditions: [],
+          feeding_goals: ['general_nutrition']
+        };
+        
+        const transformedProductData = this.transformOpenFoodFactsData(productData);
+        const scoreResult = HealthyTummiesScoreService.calculateHealthyTummiesScore(
+          transformedProductData, 
+          defaultProfile as any
+        );
+
+        return this.createScanResult(productData, scoreResult, transformedProductData);
+      }
+
+      // Transform Open Food Facts data to our format
+      const transformedProductData = this.transformOpenFoodFactsData(productData);
       
-      let nutritionalData = null;
-      let imageUrls = null;
+      // Calculate comprehensive score
+      const scoreResult = HealthyTummiesScoreService.calculateHealthyTummiesScore(
+        transformedProductData, 
+        babyProfile
+      );
 
-      if (scanResult) {
-        nutritionalData = {
-          energy: scanResult.product.nutritionalValues.energy,
-          sugar: scanResult.product.nutritionalValues.sugar,
-          salt: scanResult.product.nutritionalValues.salt,
-          saturatedFat: scanResult.product.nutritionalValues.saturatedFat,
-          fiber: scanResult.product.nutritionalValues.fiber,
-          protein: scanResult.product.nutritionalValues.protein,
-        };
+      return this.createScanResult(productData, scoreResult, transformedProductData);
 
-        imageUrls = {
-          front: scanResult.product.imageUrl,
-        };
-      }
-
-      const { error } = await supabase.rpc('update_scan_tracking', {
-        user_uuid: userId,
-        scan_score: scanResult?.healthyTummiesScore || null,
-        product_barcode: barcode || scanResult?.product.barcode || null,
-        product_name_param: scanResult?.product.productName || null,
-        brand_param: scanResult?.product.brand || null,
-        nutri_score_param: scanResult?.openFoodFactsData.nutriScore || null,
-        nova_score_param: scanResult?.openFoodFactsData.novaScore || null,
-        eco_score_param: scanResult?.openFoodFactsData.ecoScore || null,
-        nutritional_data_param: nutritionalData,
-        ingredients_param: scanResult?.product.ingredients || null,
-        image_urls_param: imageUrls,
-      });
-
-      if (error) {
-        console.error('ScanService: Error recording scan:', error);
-        return { success: false, error: error.message };
-      }
-
-      console.log('ScanService: Scan recorded successfully');
-      return { success: true };
-    } catch (error: any) {
-      console.error('ScanService: Unexpected error recording scan:', error);
-      return { success: false, error: error.message || 'Failed to record scan' };
+    } catch (error) {
+      console.error('Error calculating Healthy Tummies Score:', error);
+      // Fallback to mock data
+      return this.generateMockScanResult();
     }
   }
 
-  /**
-   * Generate a mock scan result for testing purposes
-   */
-  static generateMockScanResult(): ScanResult {
-    const mockProducts = [
-      {
-        productName: 'Organic Baby Oats',
-        brand: 'Happy Baby',
-        imageUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=800&h=600&fit=crop',
-        nutriScore: 'A',
-        novaScore: 1,
-        ecoScore: 'A',
-        nutritionalValues: {
-          energy: 380,
-          sugar: 1.2,
-          salt: 0.01,
-          saturatedFat: 1.5,
-          fiber: 8.0,
-          protein: 13.0
-        },
-        ingredients: 'Organic whole grain oats',
-        allergens: [],
-        additives: [],
-        categories: ['baby-food', 'cereals'],
-      },
-      {
-        productName: 'Fruit Puree Pouch',
-        brand: 'Gerber',
-        imageUrl: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=800&h=600&fit=crop',
-        nutriScore: 'B',
-        novaScore: 2,
-        ecoScore: 'B',
-        nutritionalValues: {
-          energy: 65,
-          sugar: 12.5,
-          salt: 0.02,
-          saturatedFat: 0.1,
-          fiber: 2.0,
-          protein: 0.5
-        },
-        ingredients: 'Apple puree, banana puree, vitamin C',
-        allergens: [],
-        additives: ['vitamin-c'],
-        categories: ['baby-food', 'fruit-purees'],
-      }
-    ];
-
-    const randomProduct = mockProducts[Math.floor(Math.random() * mockProducts.length)];
-    const babyAge = 8; // Default 8 months for mock
+  static transformOpenFoodFactsData(productData: any): ProductData {
+    const nutriments = productData.nutriments || {};
     
-    return this.calculateHealthyTummiesScore(randomProduct, babyAge);
-  }
-
-  /**
-   * Get user's scan summary data
-   */
-  static async getUserScanSummary(userId: string) {
-    try {
-      console.log('ScanService: Fetching scan summary for user:', userId);
-      
-      const { data, error } = await supabase
-        .from('scan_summary')
-        .select('*')
-        .eq('user_id', userId)
-        .order('scan_date', { ascending: false })
-        .limit(30);
-
-      if (error) {
-        console.error('ScanService: Error fetching scan summary:', error);
-        return { success: false, error: error.message };
-      }
-
-      console.log('ScanService: Fetched scan summary successfully');
-      return { success: true, data };
-    } catch (error: any) {
-      console.error('ScanService: Unexpected error fetching scan summary:', error);
-      return { success: false, error: error.message || 'Failed to fetch scan data' };
-    }
-  }
-
-  // Private helper methods
-  private static _formatProductData(product: any): ProductData {
     return {
-      productName: product.product_name || product.product_name_en || 'Unknown Product',
-      brand: product.brands || '',
-      imageUrl: product.image_front_url || product.image_url || 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=800&h=600&fit=crop',
-      nutriScore: product.nutriscore_grade?.toUpperCase(),
-      novaScore: product.nova_group,
-      ecoScore: product.ecoscore_grade?.toUpperCase(),
-      nutritionalValues: {
-        energy: product.nutriments?.['energy-kcal_100g'],
-        sugar: product.nutriments?.sugars_100g,
-        salt: product.nutriments?.salt_100g,
-        saturatedFat: product.nutriments?.['saturated-fat_100g'],
-        fiber: product.nutriments?.fiber_100g,
-        protein: product.nutriments?.proteins_100g
+      nutriscore_grade: productData.nutriscore_grade,
+      nova_group: productData.nova_group,
+      ecoscore_grade: productData.ecoscore_grade,
+      nutrients_per_100g: {
+        energy_kcal: nutriments.energy_kcal_100g || nutriments['energy-kcal_100g'],
+        proteins: nutriments.proteins_100g,
+        carbohydrates: nutriments.carbohydrates_100g,
+        sugars: nutriments.sugars_100g,
+        fiber: nutriments.fiber_100g,
+        fat: nutriments.fat_100g,
+        saturated_fat: nutriments['saturated-fat_100g'],
+        sodium: nutriments.sodium_100g,
+        iron: nutriments.iron_100g,
+        calcium: nutriments.calcium_100g,
+        vitamin_c: nutriments['vitamin-c_100g'],
+        vitamin_d: nutriments['vitamin-d_100g']
       },
-      ingredients: product.ingredients_text,
-      allergens: product.allergens_tags || [],
-      additives: product.additives_tags || [],
-      categories: product.categories_tags || [],
+      ingredients_text: productData.ingredients_text,
+      allergens: productData.allergens_tags || [],
+      additives: productData.additives_tags || [],
+      product_name: productData.product_name
     };
   }
 
-  private static _convertNutriScore(nutriScore?: string): number {
-    const scores = { 'A': 90, 'B': 75, 'C': 60, 'D': 45, 'E': 30 };
-    return scores[nutriScore as keyof typeof scores] || 50;
-  }
-
-  private static _calculateAgeAdjustments(product: ProductData, babyAge: number): number {
-    let adjustment = 0;
-    
-    // Babies under 6 months shouldn't have solid food
-    if (babyAge < 6) {
-      adjustment -= 50;
-    }
-    
-    // Age-appropriate texture considerations
-    if (babyAge < 9 && product.categories?.some(cat => cat.includes('whole-grain'))) {
-      adjustment -= 10;
-    }
-    
-    return adjustment;
-  }
-
-  private static _calculateNutritionalScore(nutritional: ProductData['nutritionalValues'], babyAge: number): number {
-    let score = 0;
-    
-    // Sugar penalties (babies should have minimal added sugar)
-    if (nutritional.sugar && nutritional.sugar > 5) {
-      score -= Math.min(20, (nutritional.sugar - 5) * 2);
-    }
-    
-    // Salt penalties (babies need very low sodium)
-    if (nutritional.salt && nutritional.salt > 0.25) {
-      score -= Math.min(25, (nutritional.salt - 0.25) * 40);
-    }
-    
-    // Fiber bonus (good for digestion)
-    if (nutritional.fiber && nutritional.fiber > 3) {
-      score += Math.min(10, nutritional.fiber - 3);
-    }
-    
-    // Protein bonus
-    if (nutritional.protein && nutritional.protein > 5) {
-      score += Math.min(10, (nutritional.protein - 5) / 2);
-    }
-    
-    return score;
-  }
-
-  private static _calculateAdditiveScore(additives: string[]): number {
-    // Penalize products with many additives
-    return Math.max(-20, -additives.length * 2);
-  }
-
-  private static _generateBreakdown(product: ProductData, babyAge: number) {
-    const sugar = product.nutritionalValues.sugar || 0;
-    const salt = product.nutritionalValues.salt || 0;
+  static createScanResult(openFoodFactsData: any, scoreResult: any, transformedData: ProductData): ScanResult {
+    const babyAge = 8; // Default fallback
     
     return {
-      sugarScore: sugar <= 5 ? 90 : Math.max(20, 90 - (sugar - 5) * 10),
-      saltScore: salt <= 0.25 ? 95 : Math.max(10, 95 - (salt - 0.25) * 100),
-      additivesScore: Math.max(40, 90 - (product.additives?.length || 0) * 10),
-      allergenWarnings: product.allergens || [],
-      nutritionalBenefits: this._identifyBenefits(product.nutritionalValues)
+      product: {
+        productName: openFoodFactsData.product_name || 'Unknown Product',
+        brand: openFoodFactsData.brands || 'Unknown Brand',
+        ingredients: openFoodFactsData.ingredients_text ? 
+          openFoodFactsData.ingredients_text.split(',').map((i: string) => i.trim()) : [],
+        nutritionalInfo: {
+          calories: transformedData.nutrients_per_100g?.energy_kcal || 0,
+          protein: transformedData.nutrients_per_100g?.proteins || 0,
+          carbs: transformedData.nutrients_per_100g?.carbohydrates || 0,
+          fat: transformedData.nutrients_per_100g?.fat || 0,
+          fiber: transformedData.nutrients_per_100g?.fiber || 0,
+          sodium: transformedData.nutrients_per_100g?.sodium || 0,
+          sugar: transformedData.nutrients_per_100g?.sugars || 0,
+        },
+        allergens: transformedData.allergens || [],
+        additives: transformedData.additives || [],
+        certifications: openFoodFactsData.labels_tags || [],
+        imageUrl: openFoodFactsData.image_url
+      },
+      healthyTummiesScore: scoreResult.final_score,
+      scoreInterpretation: scoreResult.score_interpretation,
+      scoreEmoji: scoreResult.score_emoji,
+      scoreColor: scoreResult.score_color,
+      primaryMessage: scoreResult.primary_message,
+      detailedExplanations: scoreResult.detailed_explanations,
+      breakdown: scoreResult.breakdown,
+      nutriscore: transformedData.nutriscore_grade || 'Unknown',
+      novaGroup: transformedData.nova_group || 0,
+      ecoscore: transformedData.ecoscore_grade || 'Unknown',
+      ageAppropriate: scoreResult.breakdown.age_appropriateness > 50,
+      recommendations: this.generateRecommendations(scoreResult),
+      warningFlags: this.generateWarningFlags(scoreResult, transformedData)
     };
   }
 
-  private static _identifyBenefits(nutritional: ProductData['nutritionalValues']): string[] {
-    const benefits = [];
+  static generateRecommendations(scoreResult: any): string[] {
+    const recommendations: string[] = [];
     
-    if (nutritional.fiber && nutritional.fiber > 3) {
-      benefits.push('High in fiber for healthy digestion');
+    if (scoreResult.breakdown.nutritional_quality < 60) {
+      recommendations.push("Look for products with higher protein and fiber content");
     }
     
-    if (nutritional.protein && nutritional.protein > 8) {
-      benefits.push('Good source of protein for growth');
+    if (scoreResult.breakdown.safety_processing < 60) {
+      recommendations.push("Consider products with fewer artificial additives");
     }
     
-    if (nutritional.sugar && nutritional.sugar < 2) {
-      benefits.push('Low in sugar');
+    if (scoreResult.breakdown.age_appropriateness < 70) {
+      recommendations.push("Check age-appropriate alternatives for your baby");
     }
     
-    return benefits;
+    if (scoreResult.final_score < 50) {
+      recommendations.push("Explore organic or natural alternatives");
+    }
+
+    return recommendations;
   }
 
-  private static _generateRecommendations(score: number, babyAge: number): string[] {
-    if (score >= 80) {
-      return [
-        'Excellent choice for your baby!',
-        'Rich in nutrients for healthy development',
-        'Age-appropriate ingredients'
-      ];
-    } else if (score >= 60) {
-      return [
-        'Good option with some considerations',
-        'Consider organic alternatives when possible',
-        'Monitor serving sizes'
-      ];
-    } else {
-      return [
-        'Consider healthier alternatives',
-        'High in sugar or salt for babies',
-        'Look for organic, whole food options'
-      ];
+  static generateWarningFlags(scoreResult: any, productData: ProductData): string[] {
+    const warnings: string[] = [];
+    
+    if (scoreResult.breakdown.age_appropriateness < 30) {
+      warnings.push("Not suitable for this age group");
     }
-  }
+    
+    if ((productData.nutrients_per_100g?.sodium || 0) > 500) {
+      warnings.push("High sodium content");
+    }
+    
+    if ((productData.nutrients_per_100g?.sugars || 0) > 15) {
+      warnings.push("High sugar content");
+    }
+    
+    if (productData.additives && productData.additives.length > 5) {
+      warnings.push("Contains multiple additives");
+    }
 
-  private static _generateWarnings(product: ProductData, babyAge: number): string[] {
-    const warnings = [];
-    
-    if (babyAge < 6) {
-      warnings.push('Not suitable for babies under 6 months');
-    }
-    
-    if (product.nutritionalValues.salt && product.nutritionalValues.salt > 0.5) {
-      warnings.push('High sodium content - limit serving size');
-    }
-    
-    if (product.nutritionalValues.sugar && product.nutritionalValues.sugar > 10) {
-      warnings.push('High sugar content - offer occasionally');
-    }
-    
-    if (product.allergens && product.allergens.length > 0) {
-      warnings.push('Contains potential allergens - check ingredients');
-    }
-    
     return warnings;
   }
 
-  private static async _getCachedResult(barcode: string): Promise<ProductData | null> {
-    try {
-      const { data, error } = await supabase
-        .from('product_cache')
-        .select('product_data')
-        .eq('barcode', barcode)
-        .gt('expires_at', new Date().toISOString())
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error reading cache:', error);
-        return null;
+  static generateMockScanResult(): ScanResult {
+    const mockProducts = [
+      {
+        productName: "Organic Baby Rice Cereal",
+        brand: "Happy Baby",
+        healthyTummiesScore: 85,
+        scoreInterpretation: "Good option with minor considerations",
+        scoreEmoji: "✅",
+        scoreColor: "text-green-500",
+        primaryMessage: "A solid choice with some minor areas for consideration.",
+        nutriscore: "B",
+        novaGroup: 2,
+        ecoscore: "B"
+      },
+      {
+        productName: "Sweet Potato Baby Food Puree",
+        brand: "Gerber",
+        healthyTummiesScore: 92,
+        scoreInterpretation: "Excellent choice for your baby",
+        scoreEmoji: "🌟",
+        scoreColor: "text-green-600", 
+        primaryMessage: "This product meets the highest standards for baby nutrition and safety.",
+        nutriscore: "A",
+        novaGroup: 1,
+        ecoscore: "A"
+      },
+      {
+        productName: "Fruit Snacks with Artificial Colors",
+        brand: "Generic Brand",
+        healthyTummiesScore: 25,
+        scoreInterpretation: "Not recommended for your baby",
+        scoreEmoji: "❌",
+        scoreColor: "text-red-500",
+        primaryMessage: "This product has significant concerns for baby nutrition and safety.",
+        nutriscore: "E",
+        novaGroup: 4,
+        ecoscore: "D"
       }
+    ];
 
-      // Type-safe conversion from JSON to ProductData
-      if (data?.product_data && typeof data.product_data === 'object' && !Array.isArray(data.product_data)) {
-        return data.product_data as unknown as ProductData;
-      }
-
-      return null;
-    } catch (error) {
-      console.error('Error reading cache:', error);
-      return null;
-    }
-  }
-
-  private static async _cacheResult(barcode: string, data: ProductData): Promise<void> {
-    try {
-      // Convert ProductData to JSON-compatible object
-      const jsonData = JSON.parse(JSON.stringify(data));
-      
-      await supabase
-        .from('product_cache')
-        .upsert({
-          barcode,
-          product_data: jsonData,
-          api_source: 'open_food_facts',
-          expires_at: new Date(Date.now() + this.CACHE_DURATION).toISOString()
-        });
-    } catch (error) {
-      console.error('Error caching result:', error);
-    }
+    const selectedProduct = mockProducts[Math.floor(Math.random() * mockProducts.length)];
+    
+    return {
+      product: {
+        productName: selectedProduct.productName,
+        brand: selectedProduct.brand,
+        ingredients: ["Organic rice", "Iron", "Vitamin B1", "Vitamin B6"],
+        nutritionalInfo: {
+          calories: 120,
+          protein: 2.5,
+          carbs: 25,
+          fat: 1.0,
+          fiber: 0.5,
+          sodium: 5,
+          sugar: 1
+        },
+        allergens: [],
+        additives: [],
+        certifications: ["Organic", "Non-GMO"],
+        imageUrl: "/placeholder.svg"
+      },
+      healthyTummiesScore: selectedProduct.healthyTummiesScore,
+      scoreInterpretation: selectedProduct.scoreInterpretation,
+      scoreEmoji: selectedProduct.scoreEmoji,
+      scoreColor: selectedProduct.scoreColor,
+      primaryMessage: selectedProduct.primaryMessage,
+      detailedExplanations: [
+        "💪 Rich in iron for healthy development",
+        "🌱 Organic ingredients reduce exposure to pesticides",
+        "✅ Age-appropriate texture and nutrition"
+      ],
+      breakdown: {
+        age_appropriateness: 90,
+        nutritional_quality: 85,
+        safety_processing: 95,
+        personalization: 80,
+        external_scores: 88
+      },
+      nutriscore: selectedProduct.nutriscore,
+      novaGroup: selectedProduct.novaGroup,
+      ecoscore: selectedProduct.ecoscore,
+      ageAppropriate: true,
+      recommendations: [
+        "Great choice for introducing solids",
+        "Mix with breast milk for smoother texture"
+      ],
+      warningFlags: []
+    };
   }
 }

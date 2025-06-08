@@ -1,490 +1,347 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Share, ChevronDown, ChevronUp, AlertTriangle, CheckCircle, Info, Star } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Progress } from '@/components/ui/progress';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ScanService, ScanResult } from '@/services/scanService';
-import { useScanTracking } from '@/hooks/useScanTracking';
-import { ShareModal } from '@/components/ShareModal';
-import { ReviewsModal } from '@/components/ReviewsModal';
-import { ROUTES } from '@/constants/app';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { ScanResult } from '@/services/scanService';
+import { ArrowLeft, Camera, AlertTriangle, Lightbulb, Package, Share2, MessageSquare } from 'lucide-react';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import { Button } from "@/components/ui/button"
 
-const ScanResultScreen = () => {
-  const navigate = useNavigate();
+const ScanResult = () => {
   const location = useLocation();
-  const { recordScan } = useScanTracking();
+  const navigate = useNavigate();
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
-  const [shareModalOpen, setShareModalOpen] = useState(false);
-  const [reviewsModalOpen, setReviewsModalOpen] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showReviewsModal, setShowReviewsModal] = useState(false);
 
   useEffect(() => {
-    // Get scan result from location state or generate mock result
-    const result = location.state?.scanResult || ScanService.generateMockScanResult();
-    setScanResult(result);
-    setLoading(false);
-
-    // Record the scan if no result was passed (for direct navigation)
-    if (!location.state?.scanResult && result) {
-      recordScan(result);
+    if (location.state && location.state.scanResult) {
+      setScanResult(location.state.scanResult);
+    } else {
+      // Redirect to home if no scan result is available
+      navigate('/');
     }
-  }, [location.state, recordScan]);
+  }, [location.state, navigate]);
 
-  const handleBackClick = () => {
-    navigate(ROUTES.HOME);
+  const handleScanAnother = () => {
+    navigate('/scan');
   };
-
-  const handleShare = () => {
-    setShareModalOpen(true);
-  };
-
-  const handleReviewsClick = () => {
-    setReviewsModalOpen(true);
-  };
-
-  const toggleSection = (section: string) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    if (score >= 40) return 'text-orange-600';
-    return 'text-red-600';
-  };
-
-  const getScoreBgColor = (score: number) => {
-    if (score >= 80) return 'from-green-500 to-green-600';
-    if (score >= 60) return 'from-yellow-500 to-yellow-600';
-    if (score >= 40) return 'from-orange-500 to-orange-600';
-    return 'from-red-500 to-red-600';
-  };
-
-  const getScoreMessage = (score: number, productName: string) => {
-    if (score >= 80) return `Great choice! ${productName} is excellent for your baby 😊`;
-    if (score >= 60) return `Good option! ${productName} is okay for your baby 🤔`;
-    if (score >= 40) return `Consider alternatives to ${productName} ⚠️`;
-    return `Not recommended for your baby ❌`;
-  };
-
-  if (loading || !scanResult) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-pink-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Analyzing product...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
-      {/* Header with Product Image */}
-      <div className="relative">
-        <img 
-          src={scanResult.product.imageUrl || "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=800&h=600&fit=crop"}
-          alt={scanResult.product.productName}
-          className="w-full h-64 object-cover"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=800&h=600&fit=crop';
-          }}
-        />
-        <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/50 to-transparent p-4">
-          <div className="flex items-center justify-between">
+      {/* Header */}
+      <header className="bg-white shadow-sm">
+        <div className="max-w-md mx-auto px-4 py-4 flex items-center">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center text-gray-600 hover:text-gray-800 mr-4"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </button>
+          <h1 className="text-xl font-bold text-gray-800">Scan Result</h1>
+          <div className="ml-auto flex space-x-2">
             <button
-              onClick={handleBackClick}
-              className="flex items-center text-white hover:text-gray-200 bg-black/20 rounded-full p-2"
+              onClick={() => setShowShareModal(true)}
+              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <ArrowLeft className="w-6 h-6" />
+              <Share2 className="w-5 h-5" />
             </button>
             <button
-              onClick={handleShare}
-              className="flex items-center text-white hover:text-gray-200 bg-black/20 rounded-full p-2"
+              onClick={() => setShowReviewsModal(true)}
+              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <Share className="w-6 h-6" />
+              <MessageSquare className="w-5 h-5" />
             </button>
           </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-          <h1 className="text-2xl font-bold text-white">{scanResult.product.productName}</h1>
-          {scanResult.product.brand && (
-            <p className="text-gray-200">{scanResult.product.brand}</p>
-          )}
-        </div>
-      </div>
+      </header>
 
-      {/* Main Content */}
-      <div className="max-w-md mx-auto px-4 py-6 space-y-6">
-        {/* Main Score Section */}
-        <Card className="text-center">
-          <CardContent className="p-6">
-            <div className={`w-32 h-32 mx-auto mb-4 rounded-full bg-gradient-to-br ${getScoreBgColor(scanResult.healthyTummiesScore)} flex items-center justify-center text-white relative`}>
-              <div className="text-center">
-                <div className="text-3xl font-bold">{scanResult.healthyTummiesScore}</div>
-                <div className="text-sm opacity-90">/ 100</div>
-              </div>
-              {scanResult.openFoodFactsData.nutriScore && (
-                <div className="absolute -top-2 -right-2 bg-white text-black px-2 py-1 rounded-full text-xs font-bold">
-                  {scanResult.openFoodFactsData.nutriScore}
+      <main className="max-w-md mx-auto px-4 py-6 space-y-6">
+        {scanResult && (
+          <>
+            {/* Product Info Card */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg">
+              <div className="flex items-start space-x-4 mb-4">
+                <div className="w-20 h-20 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden">
+                  {scanResult.product.imageUrl ? (
+                    <img 
+                      src={scanResult.product.imageUrl} 
+                      alt={scanResult.product.productName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Package className="w-8 h-8 text-gray-400" />
+                  )}
                 </div>
-              )}
-            </div>
-            <h2 className={`text-xl font-bold ${getScoreColor(scanResult.healthyTummiesScore)} mb-2`}>
-              Healthy Tummies Score
-            </h2>
-            <p className="text-gray-600 mb-4">
-              {getScoreMessage(scanResult.healthyTummiesScore, scanResult.product.productName)}
-            </p>
-            
-            {/* AI Analysis Disclaimer */}
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-4">
-              <p className="text-xs text-purple-700">
-                <strong>Healthy Tummies Score</strong> uses AI analysis specifically tailored to your baby's nutritional profile
-              </p>
-            </div>
-
-            {/* Social Proofing Badge */}
-            <div className="flex justify-center mb-4">
-              <Badge 
-                variant="outline" 
-                className="cursor-pointer hover:bg-gray-50 transition-colors px-3 py-2"
-                onClick={handleReviewsClick}
-              >
-                <div className="flex items-center space-x-2">
-                  <div className="flex">
-                    {[1, 2, 3, 4].map((star) => (
-                      <Star key={star} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                    ))}
-                    <Star className="w-3 h-3 text-gray-300" />
-                  </div>
-                  <span className="text-sm">150 other parents have scanned this item</span>
-                </div>
-              </Badge>
-            </div>
-
-            {!scanResult.ageAppropriate && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-                <div className="flex items-center text-red-700">
-                  <AlertTriangle className="w-5 h-5 mr-2" />
-                  <span className="font-medium">Age Consideration Required</span>
+                <div className="flex-1">
+                  <h2 className="text-lg font-bold text-gray-800 mb-1">
+                    {scanResult.product.productName}
+                  </h2>
+                  <p className="text-gray-600 text-sm">{scanResult.product.brand}</p>
                 </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Open Food Facts Scores Section */}
-        <Card className="border-blue-200 bg-blue-50">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-blue-800 flex items-center text-sm">
-              <Info className="w-4 h-4 mr-2" />
-              Additional Nutrition Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-3 mb-3">
-              {scanResult.openFoodFactsData.nutriScore && (
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center mx-auto mb-1">
-                    <span className="font-bold text-lg">{scanResult.openFoodFactsData.nutriScore}</span>
-                  </div>
-                  <p className="text-xs text-blue-700">Nutri-Score</p>
-                </div>
-              )}
-              
-              {scanResult.openFoodFactsData.novaScore && (
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center mx-auto mb-1">
-                    <span className="font-bold text-lg">{scanResult.openFoodFactsData.novaScore}</span>
-                  </div>
-                  <p className="text-xs text-blue-700">NOVA Score</p>
-                </div>
-              )}
-              
-              {scanResult.openFoodFactsData.ecoScore && (
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center mx-auto mb-1">
-                    <span className="font-bold text-lg">{scanResult.openFoodFactsData.ecoScore}</span>
-                  </div>
-                  <p className="text-xs text-blue-700">Eco-Score</p>
-                </div>
-              )}
             </div>
-            <p className="text-xs text-blue-600 text-center">
-              {scanResult.openFoodFactsData.attribution}
-            </p>
-          </CardContent>
-        </Card>
 
-        {/* Warnings Section */}
-        {scanResult.warnings.length > 0 && (
-          <Card className="border-orange-200 bg-orange-50">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-orange-800 flex items-center">
-                <AlertTriangle className="w-5 h-5 mr-2" />
-                Important Considerations
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {scanResult.warnings.map((warning, index) => (
-                  <li key={index} className="text-orange-700 text-sm flex items-start">
-                    <span className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                    {warning}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Detailed Breakdown - Enhanced with real data */}
-        <div className="space-y-4">
-          {/* Sugar Analysis */}
-          <Collapsible>
-            <CollapsibleTrigger 
-              className="w-full"
-              onClick={() => toggleSection('sugar')}
-            >
-              <Card className="cursor-pointer hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-4 h-4 rounded-full ${scanResult.breakdown.sugarScore >= 70 ? 'bg-green-500' : scanResult.breakdown.sugarScore >= 40 ? 'bg-yellow-500' : 'bg-red-500'}`}></div>
-                      <span className="font-medium">Sugar Content</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-600">{scanResult.breakdown.sugarScore}/100</span>
-                      {expandedSections.sugar ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <Card className="mt-2 bg-gray-50">
-                <CardContent className="p-4">
-                  <Progress value={scanResult.breakdown.sugarScore} className="mb-3" />
-                  <p className="text-sm text-gray-600 mb-2">
-                    Sugar content: {scanResult.product.nutritionalValues.sugar?.toFixed(1) || 'N/A'}g per 100g
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Babies should have minimal added sugar to develop healthy taste preferences and prevent tooth decay.
-                  </p>
-                </CardContent>
-              </Card>
-            </CollapsibleContent>
-          </Collapsible>
-
-          {/* Salt Analysis */}
-          <Collapsible>
-            <CollapsibleTrigger 
-              className="w-full"
-              onClick={() => toggleSection('salt')}
-            >
-              <Card className="cursor-pointer hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-4 h-4 rounded-full ${scanResult.breakdown.saltScore >= 70 ? 'bg-green-500' : scanResult.breakdown.saltScore >= 40 ? 'bg-yellow-500' : 'bg-red-500'}`}></div>
-                      <span className="font-medium">Salt Content</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-600">{scanResult.breakdown.saltScore}/100</span>
-                      {expandedSections.salt ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <Card className="mt-2 bg-gray-50">
-                <CardContent className="p-4">
-                  <Progress value={scanResult.breakdown.saltScore} className="mb-3" />
-                  <p className="text-sm text-gray-600 mb-2">
-                    Salt content: {scanResult.product.nutritionalValues.salt?.toFixed(2) || 'N/A'}g per 100g
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Baby kidneys are still developing and can't process high amounts of sodium. Keep salt intake minimal.
-                  </p>
-                </CardContent>
-              </Card>
-            </CollapsibleContent>
-          </Collapsible>
-
-          {/* Additives Analysis */}
-          <Collapsible>
-            <CollapsibleTrigger 
-              className="w-full"
-              onClick={() => toggleSection('additives')}
-            >
-              <Card className="cursor-pointer hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-4 h-4 rounded-full ${scanResult.breakdown.additivesScore >= 70 ? 'bg-green-500' : scanResult.breakdown.additivesScore >= 40 ? 'bg-yellow-500' : 'bg-red-500'}`}></div>
-                      <span className="font-medium">Additives & Preservatives</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-600">{scanResult.breakdown.additivesScore}/100</span>
-                      {expandedSections.additives ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <Card className="mt-2 bg-gray-50">
-                <CardContent className="p-4">
-                  <Progress value={scanResult.breakdown.additivesScore} className="mb-3" />
-                  <p className="text-sm text-gray-600 mb-2">
-                    {scanResult.product.additives?.length || 0} additives detected
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Fewer additives mean cleaner, more natural nutrition for your baby's developing system.
-                  </p>
-                </CardContent>
-              </Card>
-            </CollapsibleContent>
-          </Collapsible>
-
-          {/* Nutritional Benefits */}
-          {scanResult.breakdown.nutritionalBenefits.length > 0 && (
-            <Card className="border-green-200 bg-green-50">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-green-800 flex items-center">
-                  <CheckCircle className="w-5 h-5 mr-2" />
-                  Nutritional Benefits
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {scanResult.breakdown.nutritionalBenefits.map((benefit, index) => (
-                    <li key={index} className="text-green-700 text-sm flex items-start">
-                      <CheckCircle className="w-4 h-4 mt-0.5 mr-3 flex-shrink-0" />
-                      {benefit}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* BLW Placeholder Sections */}
-        <div className="space-y-6">
-          {/* Recipe Recommendations */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <span>Baby-Led Weaning Ideas</span>
-                <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">Coming Soon</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 gap-4">
-                {['Sweet Potato Fingers', 'Banana Pancakes', 'Veggie Muffins'].map((recipe, index) => (
-                  <div key={index} className="bg-gray-100 rounded-lg p-4 opacity-50">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-gray-300 rounded-lg"></div>
-                      <div>
-                        <h4 className="font-medium text-gray-700">{recipe}</h4>
-                        <p className="text-sm text-gray-500">6+ months • Easy prep</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Food Introduction Guide */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <span>Introduction Guide</span>
-                <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">Coming Soon</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {[
-                  { title: 'When to start', desc: 'Age guidance for introduction' },
-                  { title: 'Serving size', desc: 'Appropriate portions' },
-                  { title: 'Safety tips', desc: 'How to serve safely' },
-                  { title: 'Signs to watch', desc: 'Allergic reactions' }
-                ].map((item, index) => (
-                  <div key={index} className="bg-gray-100 rounded-lg p-3 opacity-50">
-                    <h4 className="font-medium text-gray-700">{item.title}</h4>
-                    <p className="text-sm text-gray-500">{item.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Scientific Backing */}
-          <Collapsible>
-            <CollapsibleTrigger 
-              className="w-full"
-              onClick={() => toggleSection('science')}
-            >
-              <Card className="cursor-pointer hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Info className="w-5 h-5 text-blue-500" />
-                      <span className="font-medium">How We Calculated This Score</span>
-                    </div>
-                    {expandedSections.science ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  </div>
-                </CardContent>
-              </Card>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <Card className="mt-2 bg-blue-50">
-                <CardContent className="p-4">
-                  <div className="space-y-3 text-sm">
-                    <p>Our scoring is based on:</p>
-                    <ul className="space-y-2 text-xs text-gray-600">
-                      <li>• WHO infant feeding guidelines</li>
-                      <li>• Pediatric nutrition research</li>
-                      <li>• Age-appropriate food safety standards</li>
-                      <li>• Allergen and additive analysis</li>
-                    </ul>
-                    <p className="text-xs text-gray-500 italic">
-                      Always consult your pediatrician before introducing new foods.
+            {/* Enhanced Healthy Tummies Score Card */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg">
+              <div className="text-center mb-6">
+                <div className="flex items-center justify-center mb-3">
+                  <span className="text-4xl mr-2">{scanResult.scoreEmoji}</span>
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-800">Healthy Tummies Score</h3>
+                    <p className={`text-lg font-semibold ${scanResult.scoreColor}`}>
+                      {scanResult.scoreInterpretation}
                     </p>
                   </div>
-                </CardContent>
-              </Card>
-            </CollapsibleContent>
-          </Collapsible>
-        </div>
-      </div>
+                </div>
+                <p className="text-gray-600 text-sm max-w-sm mx-auto">
+                  {scanResult.primaryMessage}
+                </p>
+              </div>
 
-      {/* Modals */}
-      <ShareModal 
-        open={shareModalOpen} 
-        onOpenChange={setShareModalOpen}
-        productName={scanResult.product.productName}
-        shareUrl={window.location.href}
-      />
-      
-      <ReviewsModal 
-        open={reviewsModalOpen} 
-        onOpenChange={setReviewsModalOpen}
-        productName={scanResult.product.productName}
-      />
+              {/* Detailed Explanations */}
+              {scanResult.detailedExplanations && scanResult.detailedExplanations.length > 0 && (
+                <div className="space-y-2 mb-6">
+                  {scanResult.detailedExplanations.map((explanation, index) => (
+                    <div key={index} className="bg-gray-50 rounded-lg p-3">
+                      <p className="text-sm text-gray-700">{explanation}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Score Breakdown */}
+              <div className="space-y-3">
+                <h4 className="font-semibold text-gray-800 mb-3">Score Breakdown</h4>
+                
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Age Appropriateness</span>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-16 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-blue-500 h-2 rounded-full" 
+                          style={{ width: `${scanResult.breakdown.age_appropriateness}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium text-gray-700">
+                        {scanResult.breakdown.age_appropriateness}/100
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Nutritional Quality</span>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-16 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-green-500 h-2 rounded-full" 
+                          style={{ width: `${scanResult.breakdown.nutritional_quality}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium text-gray-700">
+                        {scanResult.breakdown.nutritional_quality}/100
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Safety & Processing</span>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-16 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-red-500 h-2 rounded-full" 
+                          style={{ width: `${scanResult.breakdown.safety_processing}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium text-gray-700">
+                        {scanResult.breakdown.safety_processing}/100
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Personalization</span>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-16 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-purple-500 h-2 rounded-full" 
+                          style={{ width: `${scanResult.breakdown.personalization}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium text-gray-700">
+                        {scanResult.breakdown.personalization}/100
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">External Scores</span>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-16 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-yellow-500 h-2 rounded-full" 
+                          style={{ width: `${scanResult.breakdown.external_scores}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium text-gray-700">
+                        {scanResult.breakdown.external_scores}/100
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Warning Flags */}
+            {scanResult.warningFlags && scanResult.warningFlags.length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
+                <div className="flex items-center mb-2">
+                  <AlertTriangle className="w-5 h-5 text-red-500 mr-2" />
+                  <h4 className="font-semibold text-red-800">Important Considerations</h4>
+                </div>
+                <ul className="space-y-1">
+                  {scanResult.warningFlags.map((flag, index) => (
+                    <li key={index} className="text-sm text-red-700">• {flag}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Recommendations */}
+            {scanResult.recommendations && scanResult.recommendations.length > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+                <div className="flex items-center mb-2">
+                  <Lightbulb className="w-5 h-5 text-blue-500 mr-2" />
+                  <h4 className="font-semibold text-blue-800">Recommendations</h4>
+                </div>
+                <ul className="space-y-1">
+                  {scanResult.recommendations.map((rec, index) => (
+                    <li key={index} className="text-sm text-blue-700">• {rec}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* External Scores */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">External Scores</h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Nutri-Score</p>
+                  <p className="text-xl font-bold text-gray-800">{scanResult.nutriscore}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700">NOVA Group</p>
+                  <p className="text-xl font-bold text-gray-800">{scanResult.novaGroup}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Eco-Score</p>
+                  <p className="text-xl font-bold text-gray-800">{scanResult.ecoscore}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Nutritional Information */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">Nutritional Information (per 100g)</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Calories</p>
+                  <p className="text-xl font-bold text-gray-800">{scanResult.product.nutritionalInfo.calories} kcal</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Protein</p>
+                  <p className="text-xl font-bold text-gray-800">{scanResult.product.nutritionalInfo.protein} g</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Carbs</p>
+                  <p className="text-xl font-bold text-gray-800">{scanResult.product.nutritionalInfo.carbs} g</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Fat</p>
+                  <p className="text-xl font-bold text-gray-800">{scanResult.product.nutritionalInfo.fat} g</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Fiber</p>
+                  <p className="text-xl font-bold text-gray-800">{scanResult.product.nutritionalInfo.fiber} g</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Sugar</p>
+                  <p className="text-xl font-bold text-gray-800">{scanResult.product.nutritionalInfo.sugar} g</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Sodium</p>
+                  <p className="text-xl font-bold text-gray-800">{scanResult.product.nutritionalInfo.sodium} mg</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Ingredients */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">Ingredients</h3>
+              <ul className="list-disc list-inside text-gray-700">
+                {scanResult.product.ingredients.map((ingredient, index) => (
+                  <li key={index} className="text-sm">{ingredient}</li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <button
+                onClick={handleScanAnother}
+                className="w-full bg-gradient-to-r from-pink-500 to-purple-500 text-white py-3 rounded-xl font-semibold hover:from-pink-600 hover:to-purple-600 transition-colors flex items-center justify-center space-x-2"
+              >
+                <Camera className="w-5 h-5" />
+                <span>Scan Another Product</span>
+              </button>
+              
+              <button
+                onClick={() => navigate('/')}
+                className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+              >
+                Back to Home
+              </button>
+            </div>
+          </>
+        )}
+      </main>
+
+      {/* Share Modal */}
+      <Sheet open={showShareModal} onOpenChange={setShowShareModal}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Share Product Scan</SheetTitle>
+            <SheetDescription>
+              Share this product scan with your friends and family.
+            </SheetDescription>
+          </SheetHeader>
+          {/* Add sharing options here */}
+          <Button onClick={() => setShowShareModal(false)}>Close</Button>
+        </SheetContent>
+      </Sheet>
+
+      {/* Reviews Modal */}
+      <Sheet open={showReviewsModal} onOpenChange={setShowReviewsModal}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Product Reviews</SheetTitle>
+            <SheetDescription>
+              See what others are saying about this product.
+            </SheetDescription>
+          </SheetHeader>
+          {/* Add reviews or link to reviews here */}
+           <Button onClick={() => setShowReviewsModal(false)}>Close</Button>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
 
-export default ScanResultScreen;
+export default ScanResult;
