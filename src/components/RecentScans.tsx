@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, ChevronRight } from 'lucide-react';
+import { Clock, ChevronRight, Package } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -97,15 +97,12 @@ export const RecentScans = () => {
     return scanDate.toLocaleDateString();
   };
 
-  const getProductEmoji = (productName: string, brand: string) => {
-    const name = (productName + ' ' + brand).toLowerCase();
-    if (name.includes('cereal') || name.includes('oat')) return '🥣';
-    if (name.includes('apple') || name.includes('fruit')) return '🍎';
-    if (name.includes('yogurt') || name.includes('milk')) return '🥛';
-    if (name.includes('vegetable') || name.includes('carrot')) return '🥕';
-    if (name.includes('banana')) return '🍌';
-    if (name.includes('baby') || name.includes('infant')) return '👶';
-    return '🍼';
+  const getProductImage = (scan: ScanSummary) => {
+    // Check if image_urls exists and has at least one image
+    if (scan.image_urls && Array.isArray(scan.image_urls) && scan.image_urls.length > 0) {
+      return scan.image_urls[0];
+    }
+    return null;
   };
 
   const handleScanClick = (scan: ScanSummary) => {
@@ -211,7 +208,17 @@ export const RecentScans = () => {
             onClick={() => handleScanClick(scan)}
             className={`flex items-center space-x-4 p-3 rounded-xl border-2 ${getScoreBorder(scan.average_score)} hover:shadow-sm transition-all cursor-pointer`}
           >
-            <div className="text-2xl">{getProductEmoji(scan.product_name || '', scan.brand || '')}</div>
+            <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
+              {getProductImage(scan) ? (
+                <img 
+                  src={getProductImage(scan)} 
+                  alt={scan.product_name || 'Product'}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <Package className="w-4 h-4 text-gray-400" />
+              )}
+            </div>
             <div className="flex-1">
               <h4 className="font-medium text-gray-800 text-sm">
                 {scan.product_name || 'Unknown Product'}
