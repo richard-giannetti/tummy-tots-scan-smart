@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import ScanScreen from "./pages/ScanScreen";
 import SearchScreen from "./pages/SearchScreen";
 import ScanResult from "./pages/ScanResult";
+import ScanHistory from "./pages/ScanHistory";
 import FoodFacts from "./pages/FoodFacts";
 import Recipes from "./pages/Recipes";
 import RecipeDetail from "./pages/RecipeDetail";
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/scan" element={<ScanScreen />} />
             <Route path="/search" element={<SearchScreen />} />
             <Route path="/scan-result" element={<ScanResult />} />
+            <Route path="/scan-history" element={<ScanHistory />} />
             <Route path="/food-facts" element={<FoodFacts />} />
             <Route path="/recipes" element={<Recipes />} />
             <Route path="/recipe/:id" element={<RecipeDetail />} />
