@@ -300,7 +300,7 @@ const ScanResult = () => {
                   <p className="text-sm font-medium text-gray-700">NOVA Group</p>
                   <div className="flex items-center space-x-1">
                     <p className="text-xl font-bold text-gray-800">{scanResult.novaGroup}</p>
-                    <span className="text-lg">{getScoreEmoji(scanResult.novaGroup, 'nova')}</span>
+                    <span className="text-lg">{getScoreEmoji(scanResult.novaGroup.toString(), 'nova')}</span>
                   </div>
                 </div>
                 <div>
