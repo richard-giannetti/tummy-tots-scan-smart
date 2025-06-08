@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { type ScanResult as ScanResultType } from '@/services/scanService';
@@ -376,20 +375,24 @@ const ScanResult = () => {
               </ul>
             </div>
 
-            {/* Additives */}
-            {scanResult.product.additives && scanResult.product.additives.length > 0 && (
-              <div className="bg-white rounded-2xl p-6 shadow-lg">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">Additives</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Substances added to preserve, enhance flavor, or improve appearance. Some may be concerning for babies.
-                </p>
+            {/* Additives - Always show this section */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg">
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">Additives</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Substances added to preserve, enhance flavor, or improve appearance. Some may be concerning for babies.
+              </p>
+              {scanResult.product.additives && scanResult.product.additives.length > 0 ? (
                 <ul className="list-disc list-inside text-gray-700 space-y-1">
                   {scanResult.product.additives.map((additive, index) => (
                     <li key={index} className="text-sm">{additive}</li>
                   ))}
                 </ul>
-              </div>
-            )}
+              ) : (
+                <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg p-3">
+                  ✓ No additives detected in this product
+                </p>
+              )}
+            </div>
 
             {/* Action Buttons */}
             <div className="space-y-3">
