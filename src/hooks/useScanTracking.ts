@@ -1,7 +1,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
-import { ScanService, ScanResult } from '@/services/scanService';
+import { ScanService, type ScanResult } from '@/services/scanService';
 import { useGamification } from '@/hooks/useGamification';
 
 export const useScanTracking = () => {

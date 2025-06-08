@@ -44,10 +44,15 @@ export const BabyProfileCard = ({ hasProfile, babyProfile, onProfileComplete }: 
       const updatedProfileData = {
         name: babyProfile.name,
         birth_date: babyProfile.birth_date,
+        weight_kg: babyProfile.weight_kg,
+        feeding_stage: babyProfile.feeding_stage,
         allergies: babyProfile.allergies,
         dietary_restrictions: babyProfile.dietary_restrictions,
+        dietary_preferences: babyProfile.dietary_preferences || [],
+        health_conditions: babyProfile.health_conditions || [],
+        feeding_goals: babyProfile.feeding_goals || [],
         feeding_type: babyProfile.feeding_type,
-        medical_conditions: babyProfile.medical_conditions,
+        medical_conditions: babyProfile.medical_conditions || [],
         avatar_url: avatarUrl
       };
 

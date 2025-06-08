@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Baby, Info } from 'lucide-react';
 import { BabyProfile } from '@/services/babyProfileService';
@@ -15,7 +14,7 @@ export const BabyProfileForm = ({ hasProfile, babyProfile, onSubmit, onCancel }:
     name: '',
     birth_date: '',
     weight_kg: undefined as number | undefined,
-    feeding_stage: '' as 'exclusive_milk' | 'introducing_solids' | 'mixed_feeding' | 'toddler_food' | '',
+    feeding_stage: undefined as 'exclusive_milk' | 'introducing_solids' | 'mixed_feeding' | 'toddler_food' | undefined,
     allergies: [] as string[],
     dietary_restrictions: [] as string[],
     dietary_preferences: [] as string[],
@@ -31,7 +30,7 @@ export const BabyProfileForm = ({ hasProfile, babyProfile, onSubmit, onCancel }:
         name: babyProfile.name || '',
         birth_date: babyProfile.birth_date || '',
         weight_kg: babyProfile.weight_kg || undefined,
-        feeding_stage: babyProfile.feeding_stage || '',
+        feeding_stage: babyProfile.feeding_stage || undefined,
         allergies: babyProfile.allergies || [],
         dietary_restrictions: babyProfile.dietary_restrictions || [],
         dietary_preferences: babyProfile.dietary_preferences || [],
@@ -49,10 +48,10 @@ export const BabyProfileForm = ({ hasProfile, babyProfile, onSubmit, onCancel }:
   const healthConditionOptions = ['Reflux', 'Constipation', 'Eczema', 'Food sensitivities'];
   const feedingGoalOptions = ['Weight gain', 'Brain development', 'Digestive health', 'General nutrition', 'Immune support'];
   const feedingStageOptions = [
-    { value: 'exclusive_milk', label: 'Exclusive milk feeding (0-6 months)' },
-    { value: 'introducing_solids', label: 'Introducing solids (6-12 months)' },
-    { value: 'mixed_feeding', label: 'Mixed feeding (6-24 months)' },
-    { value: 'toddler_food', label: 'Toddler foods (12+ months)' }
+    { value: 'exclusive_milk' as const, label: 'Exclusive milk feeding (0-6 months)' },
+    { value: 'introducing_solids' as const, label: 'Introducing solids (6-12 months)' },
+    { value: 'mixed_feeding' as const, label: 'Mixed feeding (6-24 months)' },
+    { value: 'toddler_food' as const, label: 'Toddler foods (12+ months)' }
   ];
   const feedingOptions = [
     { value: 'breastfed', label: 'Breastfed' },
@@ -64,7 +63,12 @@ export const BabyProfileForm = ({ hasProfile, babyProfile, onSubmit, onCancel }:
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.name.trim() && formData.birth_date) {
-      onSubmit(formData);
+      onSubmit({
+        ...formData,
+        dietary_preferences: formData.dietary_preferences,
+        health_conditions: formData.health_conditions,
+        feeding_goals: formData.feeding_goals
+      });
     }
   };
 
@@ -161,7 +165,7 @@ export const BabyProfileForm = ({ hasProfile, babyProfile, onSubmit, onCancel }:
                   type="button"
                   onClick={() => setFormData(prev => ({ 
                     ...prev, 
-                    feeding_stage: prev.feeding_stage === option.value ? '' : option.value as any
+                    feeding_stage: prev.feeding_stage === option.value ? undefined : option.value
                   }))}
                   className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left ${
                     formData.feeding_stage === option.value

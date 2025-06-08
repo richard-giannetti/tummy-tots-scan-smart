@@ -59,8 +59,27 @@ export class BabyProfileService {
         return { success: false, error: error.message };
       }
 
+      // Transform database response to match our interface
+      const transformedProfile: BabyProfile = {
+        id: profile.id,
+        user_id: profile.user_id,
+        name: profile.name,
+        birth_date: profile.birth_date,
+        weight_kg: profile.weight_kg,
+        feeding_stage: profile.feeding_stage as BabyProfile['feeding_stage'],
+        allergies: profile.allergies || [],
+        dietary_restrictions: profile.dietary_restrictions || [],
+        dietary_preferences: profile.dietary_preferences || [],
+        health_conditions: profile.health_conditions || [],
+        feeding_goals: profile.feeding_goals || [],
+        feeding_type: profile.feeding_type,
+        medical_conditions: profile.medical_conditions || [],
+        avatar_url: profile.avatar_url,
+        created_at: profile.created_at
+      };
+
       console.log('BabyProfileService: Baby profile fetched successfully');
-      return { success: true, profile };
+      return { success: true, profile: transformedProfile };
     } catch (error: any) {
       console.error('BabyProfileService: Unexpected error fetching baby profile:', error);
       return { success: false, error: error.message || 'An unexpected error occurred' };
@@ -107,8 +126,27 @@ export class BabyProfileService {
         return { success: false, error: error.message };
       }
 
+      // Transform database response to match our interface
+      const transformedProfile: BabyProfile = {
+        id: profile.id,
+        user_id: profile.user_id,
+        name: profile.name,
+        birth_date: profile.birth_date,
+        weight_kg: profile.weight_kg,
+        feeding_stage: profile.feeding_stage as BabyProfile['feeding_stage'],
+        allergies: profile.allergies || [],
+        dietary_restrictions: profile.dietary_restrictions || [],
+        dietary_preferences: profile.dietary_preferences || [],
+        health_conditions: profile.health_conditions || [],
+        feeding_goals: profile.feeding_goals || [],
+        feeding_type: profile.feeding_type,
+        medical_conditions: profile.medical_conditions || [],
+        avatar_url: profile.avatar_url,
+        created_at: profile.created_at
+      };
+
       console.log('BabyProfileService: Baby profile saved successfully');
-      return { success: true, profile };
+      return { success: true, profile: transformedProfile };
     } catch (error: any) {
       console.error('BabyProfileService: Unexpected error saving baby profile:', error);
       return { success: false, error: error.message || 'An unexpected error occurred' };

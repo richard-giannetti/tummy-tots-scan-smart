@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ScanResult } from '@/services/scanService';
+import { type ScanResult as ScanResultType } from '@/services/scanService';
 import { ArrowLeft, Camera, AlertTriangle, Lightbulb, Package, Share2, MessageSquare } from 'lucide-react';
 import {
   Sheet,
@@ -15,7 +16,7 @@ import { Button } from "@/components/ui/button"
 const ScanResult = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+  const [scanResult, setScanResult] = useState<ScanResultType | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showReviewsModal, setShowReviewsModal] = useState(false);
 
