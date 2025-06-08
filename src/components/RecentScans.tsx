@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Clock, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,7 +11,7 @@ interface ScanSummary {
   product_name: string;
   brand: string;
   barcode: string;
-  image_urls: string[];
+  image_urls: any; // Changed from string[] to any to handle Json type from database
 }
 
 export const RecentScans = () => {
@@ -48,7 +47,18 @@ export const RecentScans = () => {
         return;
       }
 
-      setRecentScans(data || []);
+      // Transform the data to match our interface
+      const transformedData = (data || []).map(scan => ({
+        id: scan.id,
+        scan_date: scan.scan_date,
+        average_score: scan.average_score || 0,
+        product_name: scan.product_name || '',
+        brand: scan.brand || '',
+        barcode: scan.barcode || '',
+        image_urls: scan.image_urls || []
+      }));
+
+      setRecentScans(transformedData);
     } catch (error) {
       console.error('Error fetching recent scans:', error);
       toast({
