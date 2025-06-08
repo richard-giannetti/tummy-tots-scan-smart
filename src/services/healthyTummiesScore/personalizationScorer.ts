@@ -60,6 +60,7 @@ export class PersonalizationScorer {
       }
     }
 
+    // Ensure score stays within 0-100 range
     return Math.min(100, Math.max(0, personalizationScore));
   }
 }

@@ -28,6 +28,7 @@ export class AgeAppropriatenessScorer {
       if (sugars > 5) baseScore -= 15;
     }
 
-    return Math.max(0, baseScore);
+    // Ensure score stays within 0-100 range
+    return Math.min(100, Math.max(0, baseScore));
   }
 }

@@ -3,7 +3,18 @@ import { NUTRITIONAL_RECOMMENDATIONS } from './constants';
 
 export class NutritionalQualityScorer {
   static calculateScore(nutrients: any, babyAgeMonths: number): number {
-    const ageGroup = babyAgeMonths < 12 ? 12 : babyAgeMonths < 24 ? 24 : 36;
+    // Fix age group logic - use proper age ranges
+    let ageGroup: number;
+    if (babyAgeMonths < 6) {
+      ageGroup = 6;
+    } else if (babyAgeMonths < 12) {
+      ageGroup = 12;
+    } else if (babyAgeMonths < 24) {
+      ageGroup = 24;
+    } else {
+      ageGroup = 36;
+    }
+    
     let qualityScore = 50; // Start with neutral baseline
 
     if (!nutrients) return qualityScore;

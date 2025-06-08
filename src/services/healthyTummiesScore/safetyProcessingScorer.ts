@@ -28,7 +28,7 @@ export class SafetyProcessingScorer {
       }
     }
 
-    // Cap additive penalty
+    // Cap additive penalty to prevent extreme scores
     totalAdditivePenalty = Math.max(totalAdditivePenalty, -60);
     baseScore += totalAdditivePenalty;
 
@@ -51,6 +51,7 @@ export class SafetyProcessingScorer {
       }
     }
 
-    return Math.max(0, baseScore);
+    // Ensure score stays within 0-100 range
+    return Math.min(100, Math.max(0, baseScore));
   }
 }
