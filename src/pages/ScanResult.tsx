@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { type ScanResult as ScanResultType } from '@/services/scanService';
-import { ArrowLeft, Camera, AlertTriangle, Lightbulb, Package, Share2, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Camera, AlertTriangle, Lightbulb, Package, Share2, MessageSquare, Info } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -231,7 +231,13 @@ const ScanResult = () => {
 
             {/* External Scores */}
             <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h3 className="text-lg font-semibold text-gray-800 mb-3">External Scores</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold text-gray-800">External Scores</h3>
+                <div className="flex items-center text-xs text-gray-500">
+                  <Info className="w-3 h-3 mr-1" />
+                  <span>Data from Open Food Facts</span>
+                </div>
+              </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm font-medium text-gray-700">Nutri-Score</p>
@@ -285,13 +291,31 @@ const ScanResult = () => {
 
             {/* Ingredients */}
             <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h3 className="text-lg font-semibold text-gray-800 mb-3">Ingredients</h3>
-              <ul className="list-disc list-inside text-gray-700">
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">Ingredients</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Listed in order of quantity. First ingredient makes up the largest portion of the product.
+              </p>
+              <ul className="list-disc list-inside text-gray-700 space-y-1">
                 {scanResult.product.ingredients.map((ingredient, index) => (
                   <li key={index} className="text-sm">{ingredient}</li>
                 ))}
               </ul>
             </div>
+
+            {/* Additives */}
+            {scanResult.product.additives && scanResult.product.additives.length > 0 && (
+              <div className="bg-white rounded-2xl p-6 shadow-lg">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">Additives</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Substances added to preserve, enhance flavor, or improve appearance. Some may be concerning for babies.
+                </p>
+                <ul className="list-disc list-inside text-gray-700 space-y-1">
+                  {scanResult.product.additives.map((additive, index) => (
+                    <li key={index} className="text-sm">{additive}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Action Buttons */}
             <div className="space-y-3">
