@@ -143,22 +143,22 @@ const ScanResult = () => {
               </div>
 
               {/* Reviews Call-to-Action */}
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <Star className="w-5 h-5 text-blue-500" />
+                  <div className="flex items-center space-x-2">
+                    <Star className="w-4 h-4 text-blue-500" />
                     <div>
-                      <p className="text-sm font-medium text-blue-800">See Parent Reviews</p>
-                      <p className="text-xs text-blue-600">Read what other parents think about this product</p>
+                      <p className="text-xs font-medium text-blue-800">See Parent Reviews</p>
+                      <p className="text-xs text-blue-600">Read what other parents think</p>
                     </div>
                   </div>
                   <Button
                     onClick={() => setShowReviewsModal(true)}
                     variant="outline"
                     size="sm"
-                    className="text-blue-600 border-blue-300 hover:bg-blue-100"
+                    className="text-blue-600 border-blue-300 hover:bg-blue-100 text-xs px-2 py-1"
                   >
-                    <MessageSquare className="w-4 h-4 mr-1" />
+                    <MessageSquare className="w-3 h-3 mr-1" />
                     Reviews
                   </Button>
                 </div>
