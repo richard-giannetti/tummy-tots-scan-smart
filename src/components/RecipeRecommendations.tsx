@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ChefHat, Clock, Users, Eye } from 'lucide-react';
+import { ChefHat, Clock, Eye } from 'lucide-react';
 import { RecipesService, Recipe } from '@/services/recipesService';
 import { useNavigate } from 'react-router-dom';
 
@@ -106,15 +106,9 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
               <h4 className="font-medium text-gray-800 text-xs sm:text-sm mb-1 leading-tight break-words">
                 {recipe.title}
               </h4>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 space-y-1 sm:space-y-0 text-xs text-gray-500">
-                <div className="flex items-center space-x-1">
-                  <Clock className="w-3 h-3 flex-shrink-0" />
-                  <span className="truncate">{recipe.time || 'N/A'}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Users className="w-3 h-3 flex-shrink-0" />
-                  <span className="truncate">{recipe.servings || 1} serving{(recipe.servings || 1) > 1 ? 's' : ''}</span>
-                </div>
+              <div className="flex items-center space-x-1 text-xs text-gray-500">
+                <Clock className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate">{recipe.time || 'N/A'}</span>
               </div>
             </div>
             <div className="flex-shrink-0 self-center">
