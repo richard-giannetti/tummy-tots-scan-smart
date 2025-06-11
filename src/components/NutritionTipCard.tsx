@@ -41,61 +41,101 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
     const fetchTips = async () => {
       try {
         setIsLoading(true);
-        console.log('Fetching tips from database...');
+        console.log('Starting tips fetch process...');
+        console.log('User:', user?.id);
+        console.log('Supabase client initialized:', !!supabase);
         
-        // Get all tips (no age filtering)
-        const { data: tips, error } = await supabase
+        // Try multiple approaches to fetch tips
+        console.log('Attempting basic select query...');
+        const { data: tips, error, count } = await supabase
           .from('tips')
-          .select('*');
+          .select('*', { count: 'exact' });
 
-        console.log('Tips query result:', { tips, error });
+        console.log('Query completed with results:');
+        console.log('- Data:', tips);
+        console.log('- Error:', error);
+        console.log('- Count:', count);
+        console.log('- Data type:', typeof tips);
+        console.log('- Is array:', Array.isArray(tips));
 
         if (error) {
-          console.error('Error fetching tips:', error);
+          console.error('Supabase query error:', error);
+          
+          // Try alternative query approach
+          console.log('Trying alternative query approach...');
+          try {
+            const { data: altTips, error: altError } = await supabase
+              .from('tips')
+              .select('tip_id, tip_title, tip_description, tip_age');
+            
+            console.log('Alternative query result:', { altTips, altError });
+            
+            if (!altError && altTips) {
+              setAvailableTips(altTips);
+              if (altTips.length > 0) {
+                const randomTip = altTips[Math.floor(Math.random() * altTips.length)];
+                setCurrentTip(randomTip);
+                console.log('Using alternative query result, selected tip:', randomTip);
+              }
+            }
+          } catch (altErr) {
+            console.error('Alternative query also failed:', altErr);
+          }
+          
           setIsLoading(false);
           return;
         }
 
-        console.log('Number of tips fetched:', tips?.length || 0);
-        setAvailableTips(tips || []);
-
-        // Load read tips from localStorage with proper type casting
-        const savedReadTips = localStorage.getItem(`readTips_${user?.id}`);
-        const readTipIds = savedReadTips 
-          ? new Set<number>(JSON.parse(savedReadTips) as number[]) 
-          : new Set<number>();
-        setReadTips(readTipIds);
-
-        console.log('Read tips:', readTipIds);
-
-        // Find unread tips
-        const unreadTips = (tips || []).filter(tip => !readTipIds.has(tip.tip_id));
-        console.log('Unread tips:', unreadTips.length);
+        console.log('Processing successful query result...');
+        console.log('Tips array length:', tips?.length || 0);
         
-        if (unreadTips.length > 0) {
-          // Select random unread tip
-          const randomTip = unreadTips[Math.floor(Math.random() * unreadTips.length)];
-          console.log('Selected unread tip:', randomTip);
-          setCurrentTip(randomTip);
-        } else if ((tips || []).length > 0) {
-          // If all tips are read, show a random one anyway
-          const randomTip = tips[Math.floor(Math.random() * tips.length)];
-          console.log('Selected random tip (all read):', randomTip);
-          setCurrentTip(randomTip);
+        if (tips && tips.length > 0) {
+          console.log('First tip sample:', tips[0]);
+          setAvailableTips(tips);
+
+          // Load read tips from localStorage with proper type casting
+          const savedReadTips = localStorage.getItem(`readTips_${user?.id}`);
+          const readTipIds = savedReadTips 
+            ? new Set<number>(JSON.parse(savedReadTips) as number[]) 
+            : new Set<number>();
+          setReadTips(readTipIds);
+
+          console.log('Read tips from localStorage:', readTipIds);
+
+          // Find unread tips
+          const unreadTips = tips.filter(tip => !readTipIds.has(tip.tip_id));
+          console.log('Unread tips count:', unreadTips.length);
+          
+          if (unreadTips.length > 0) {
+            // Select random unread tip
+            const randomTip = unreadTips[Math.floor(Math.random() * unreadTips.length)];
+            console.log('Selected unread tip:', randomTip);
+            setCurrentTip(randomTip);
+          } else {
+            // If all tips are read, show a random one anyway
+            const randomTip = tips[Math.floor(Math.random() * tips.length)];
+            console.log('All tips read, selected random tip:', randomTip);
+            setCurrentTip(randomTip);
+          }
         } else {
-          console.log('No tips available in database');
+          console.log('No tips found in query result');
+          console.log('Raw response data:', tips);
         }
 
       } catch (error) {
-        console.error('Error in fetchTips:', error);
+        console.error('Catch block - Error in fetchTips:', error);
+        console.error('Error type:', typeof error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
       } finally {
         setIsLoading(false);
       }
     };
 
     if (user) {
+      console.log('User authenticated, fetching tips...');
       fetchTips();
     } else {
+      console.log('No user found, skipping tips fetch');
       setIsLoading(false);
     }
   }, [user]);
@@ -155,6 +195,9 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
             </p>
             <p className="text-xs text-gray-500 mt-2">
               Debug: {availableTips.length} tips in database
+            </p>
+            <p className="text-xs text-gray-500">
+              User: {user?.id ? 'Authenticated' : 'Not authenticated'}
             </p>
           </div>
         </div>
