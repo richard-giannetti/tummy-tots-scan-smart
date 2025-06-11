@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp, BookOpen, CheckCircle, Lightbulb } from 'lucide-react';
+import { ChevronDown, ChevronUp, BookOpen, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { BabyProfile } from '@/services/babyProfileService';
 
@@ -132,9 +131,6 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
         <Card className="p-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center mr-3">
-                <Lightbulb className="w-4 h-4 text-white" />
-              </div>
               <h2 className="text-xl font-bold text-gray-800">
                 Tips for {babyProfile?.name || 'Your Baby'}
               </h2>
@@ -155,9 +151,6 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center mr-3">
-                <Lightbulb className="w-4 h-4 text-white" />
-              </div>
               <h2 className="text-xl font-bold text-gray-800">
                 Tips for {babyProfile?.name || 'Your Baby'}
               </h2>
@@ -195,9 +188,6 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
           {/* Section Header Inside Card */}
           <div className="flex items-center justify-between p-4 border-b border-gray-100">
             <div className="flex items-center">
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center mr-3">
-                <Lightbulb className="w-4 h-4 text-white" />
-              </div>
               <h2 className="text-xl font-bold text-gray-800">
                 Tips for {babyProfile?.name || 'Your Baby'}
               </h2>
