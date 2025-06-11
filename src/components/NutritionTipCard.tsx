@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
@@ -128,17 +129,17 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
   if (isLoading) {
     return (
       <div className={className}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center mr-3">
-              <Lightbulb className="w-4 h-4 text-white" />
-            </div>
-            <h2 className="text-xl font-bold text-gray-800">
-              Tips for {babyProfile?.name || 'Your Baby'}
-            </h2>
-          </div>
-        </div>
         <Card className="p-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center mr-3">
+                <Lightbulb className="w-4 h-4 text-white" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-800">
+                Tips for {babyProfile?.name || 'Your Baby'}
+              </h2>
+            </div>
+          </div>
           <div className="animate-pulse">
             <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
             <div className="h-3 bg-gray-200 rounded w-1/2"></div>
@@ -151,32 +152,34 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
   if (!currentTip) {
     return (
       <div className={className}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center mr-3">
-              <Lightbulb className="w-4 h-4 text-white" />
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center mr-3">
+                <Lightbulb className="w-4 h-4 text-white" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-800">
+                Tips for {babyProfile?.name || 'Your Baby'}
+              </h2>
             </div>
-            <h2 className="text-xl font-bold text-gray-800">
-              Tips for {babyProfile?.name || 'Your Baby'}
-            </h2>
           </div>
-        </div>
-        <Card className="p-6 text-center">
-          <div className="flex flex-col items-center space-y-3">
-            <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-800 mb-1">No Tips Available</h3>
-              <p className="text-sm text-gray-600">
-                No nutrition tips found in the database. Please check back later!
-              </p>
-              <p className="text-xs text-gray-500 mt-2">
-                Debug: {availableTips.length} tips in database
-              </p>
-              <p className="text-xs text-gray-500">
-                User: {user?.id ? 'Authenticated' : 'Not authenticated'}
-              </p>
+          <div className="text-center">
+            <div className="flex flex-col items-center space-y-3">
+              <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-800 mb-1">No Tips Available</h3>
+                <p className="text-sm text-gray-600">
+                  No nutrition tips found in the database. Please check back later!
+                </p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Debug: {availableTips.length} tips in database
+                </p>
+                <p className="text-xs text-gray-500">
+                  User: {user?.id ? 'Authenticated' : 'Not authenticated'}
+                </p>
+              </div>
             </div>
           </div>
         </Card>
@@ -186,21 +189,21 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
 
   return (
     <div className={className}>
-      {/* Section Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center">
-          <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center mr-3">
-            <Lightbulb className="w-4 h-4 text-white" />
-          </div>
-          <h2 className="text-xl font-bold text-gray-800">
-            Tips for {babyProfile?.name || 'Your Baby'}
-          </h2>
-        </div>
-      </div>
-
-      {/* Tip Card */}
+      {/* Tip Card with Header Inside */}
       <Card className="transition-all duration-300 ease-in-out hover:shadow-md">
         <CardContent className="p-0">
+          {/* Section Header Inside Card */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-100">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center mr-3">
+                <Lightbulb className="w-4 h-4 text-white" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-800">
+                Tips for {babyProfile?.name || 'Your Baby'}
+              </h2>
+            </div>
+          </div>
+
           {/* Collapsed State */}
           <div 
             className={`p-4 cursor-pointer transition-all duration-300 ${!isExpanded ? 'hover:bg-gray-50' : ''}`}
