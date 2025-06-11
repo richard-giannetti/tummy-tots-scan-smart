@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { BabyProfile } from '@/services/babyProfileService';
+import { UserProgress } from '@/services/gamificationService';
 import { BabyProfileCard } from './BabyProfileCard';
 import { ScanButton } from './ScanButton';
 import { RecentScans } from './RecentScans';
@@ -9,17 +10,10 @@ import { FoodFacts } from './FoodFacts';
 import { FeedingJourneyProgress } from './FeedingJourneyProgress';
 import { NutritionTipCard } from './NutritionTipCard';
 
-interface Progress {
-  feeding_level: number;
-  total_points: number;
-  level_progress: number;
-  current_streak: number;
-}
-
 interface HomepageMainContentProps {
   hasProfile: boolean;
   babyProfile: BabyProfile | null;
-  progress: Progress | null;
+  progress: UserProgress | null;
   onProfileComplete: (profileData: BabyProfile | Omit<BabyProfile, 'id' | 'user_id' | 'created_at'>) => void;
 }
 

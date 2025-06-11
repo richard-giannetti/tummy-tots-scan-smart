@@ -2,15 +2,7 @@
 import React from 'react';
 import { AchievementNotification } from './AchievementNotification';
 import { AchievementsModal } from './AchievementsModal';
-
-interface Achievement {
-  id: string;
-  title: string;
-  description: string;
-  points: number;
-  unlocked: boolean;
-  unlockedAt?: string;
-}
+import { Achievement } from '@/services/gamificationService';
 
 interface AchievementManagerProps {
   newAchievements: Achievement[];

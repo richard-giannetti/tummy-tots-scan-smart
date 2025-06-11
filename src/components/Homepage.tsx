@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { BabyProfileService, BabyProfile } from '@/services/babyProfileService';
@@ -169,7 +170,7 @@ export const Homepage = () => {
         </div>
       </div>
     );
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 pb-20">
