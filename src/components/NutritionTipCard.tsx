@@ -41,11 +41,14 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
     const fetchTips = async () => {
       try {
         setIsLoading(true);
+        console.log('Fetching tips from database...');
         
         // Get all tips (no age filtering)
         const { data: tips, error } = await supabase
           .from('tips')
           .select('*');
+
+        console.log('Tips query result:', { tips, error });
 
         if (error) {
           console.error('Error fetching tips:', error);
@@ -53,6 +56,7 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
           return;
         }
 
+        console.log('Number of tips fetched:', tips?.length || 0);
         setAvailableTips(tips || []);
 
         // Load read tips from localStorage with proper type casting
@@ -62,17 +66,24 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
           : new Set<number>();
         setReadTips(readTipIds);
 
+        console.log('Read tips:', readTipIds);
+
         // Find unread tips
         const unreadTips = (tips || []).filter(tip => !readTipIds.has(tip.tip_id));
+        console.log('Unread tips:', unreadTips.length);
         
         if (unreadTips.length > 0) {
           // Select random unread tip
           const randomTip = unreadTips[Math.floor(Math.random() * unreadTips.length)];
+          console.log('Selected unread tip:', randomTip);
           setCurrentTip(randomTip);
         } else if ((tips || []).length > 0) {
           // If all tips are read, show a random one anyway
           const randomTip = tips[Math.floor(Math.random() * tips.length)];
+          console.log('Selected random tip (all read):', randomTip);
           setCurrentTip(randomTip);
+        } else {
+          console.log('No tips available in database');
         }
 
       } catch (error) {
@@ -82,7 +93,11 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
       }
     };
 
-    fetchTips();
+    if (user) {
+      fetchTips();
+    } else {
+      setIsLoading(false);
+    }
   }, [user]);
 
   // Mark tip as read
@@ -134,9 +149,12 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
             <CheckCircle className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-800 mb-1">Great job!</h3>
+            <h3 className="font-semibold text-gray-800 mb-1">No Tips Available</h3>
             <p className="text-sm text-gray-600">
-              You've read all nutrition tips available. Check back for new tips!
+              No nutrition tips found in the database. Please check back later!
+            </p>
+            <p className="text-xs text-gray-500 mt-2">
+              Debug: {availableTips.length} tips in database
             </p>
           </div>
         </div>
