@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp, BookOpen, CheckCircle } from 'lucide-react';
+import { ChevronDown, ChevronUp, BookOpen, CheckCircle, Lightbulb } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { BabyProfile } from '@/services/babyProfileService';
 
@@ -128,116 +127,155 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
 
   if (isLoading) {
     return (
-      <Card className={`p-4 ${className}`}>
-        <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+      <div className={className}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center mr-3">
+              <Lightbulb className="w-4 h-4 text-white" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-800">
+              Tips for {babyProfile?.name || 'Your Baby'}
+            </h2>
+          </div>
         </div>
-      </Card>
+        <Card className="p-4">
+          <div className="animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        </Card>
+      </div>
     );
   }
 
   if (!currentTip) {
     return (
-      <Card className={`p-6 text-center ${className}`}>
-        <div className="flex flex-col items-center space-y-3">
-          <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center">
-            <CheckCircle className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-gray-800 mb-1">No Tips Available</h3>
-            <p className="text-sm text-gray-600">
-              No nutrition tips found in the database. Please check back later!
-            </p>
-            <p className="text-xs text-gray-500 mt-2">
-              Debug: {availableTips.length} tips in database
-            </p>
-            <p className="text-xs text-gray-500">
-              User: {user?.id ? 'Authenticated' : 'Not authenticated'}
-            </p>
+      <div className={className}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center mr-3">
+              <Lightbulb className="w-4 h-4 text-white" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-800">
+              Tips for {babyProfile?.name || 'Your Baby'}
+            </h2>
           </div>
         </div>
-      </Card>
+        <Card className="p-6 text-center">
+          <div className="flex flex-col items-center space-y-3">
+            <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-800 mb-1">No Tips Available</h3>
+              <p className="text-sm text-gray-600">
+                No nutrition tips found in the database. Please check back later!
+              </p>
+              <p className="text-xs text-gray-500 mt-2">
+                Debug: {availableTips.length} tips in database
+              </p>
+              <p className="text-xs text-gray-500">
+                User: {user?.id ? 'Authenticated' : 'Not authenticated'}
+              </p>
+            </div>
+          </div>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <Card className={`transition-all duration-300 ease-in-out hover:shadow-md ${className}`}>
-      <CardContent className="p-0">
-        {/* Collapsed State */}
-        <div 
-          className={`p-4 cursor-pointer transition-all duration-300 ${!isExpanded ? 'hover:bg-gray-50' : ''}`}
-          onClick={() => !isExpanded && setIsExpanded(true)}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center space-x-2 mb-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center flex-shrink-0">
-                  <BookOpen className="w-4 h-4 text-white" />
+    <div className={className}>
+      {/* Section Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center">
+          <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center mr-3">
+            <Lightbulb className="w-4 h-4 text-white" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-800">
+            Tips for {babyProfile?.name || 'Your Baby'}
+          </h2>
+        </div>
+      </div>
+
+      {/* Tip Card */}
+      <Card className="transition-all duration-300 ease-in-out hover:shadow-md">
+        <CardContent className="p-0">
+          {/* Collapsed State */}
+          <div 
+            className={`p-4 cursor-pointer transition-all duration-300 ${!isExpanded ? 'hover:bg-gray-50' : ''}`}
+            onClick={() => !isExpanded && setIsExpanded(true)}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center space-x-2 mb-2">
+                  <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center flex-shrink-0">
+                    <BookOpen className="w-4 h-4 text-white" />
+                  </div>
+                  <Badge className={`text-xs border ${getAgeBadgeColor(currentTip.tip_age)}`}>
+                    {currentTip.tip_age}
+                  </Badge>
                 </div>
-                <Badge className={`text-xs border ${getAgeBadgeColor(currentTip.tip_age)}`}>
-                  {currentTip.tip_age}
-                </Badge>
+                <h3 className="font-semibold text-gray-800 text-sm leading-tight">
+                  {currentTip.tip_title}
+                </h3>
+                {!isExpanded && (
+                  <p className="text-xs text-gray-500 mt-1">Tap to read more</p>
+                )}
               </div>
-              <h3 className="font-semibold text-gray-800 text-sm leading-tight">
-                {currentTip.tip_title}
-              </h3>
               {!isExpanded && (
-                <p className="text-xs text-gray-500 mt-1">Tap to read more</p>
+                <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0 ml-2" />
               )}
             </div>
-            {!isExpanded && (
-              <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0 ml-2" />
-            )}
           </div>
-        </div>
 
-        {/* Expanded State */}
-        {isExpanded && (
-          <div className="border-t border-gray-100">
-            <div className="p-4 space-y-4">
-              <div className="max-h-40 overflow-y-auto">
-                <p className="text-sm text-gray-700 leading-relaxed">
-                  {currentTip.tip_description}
-                </p>
-              </div>
-              
-              <div className="flex items-center justify-between pt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsExpanded(false)}
-                  className="text-xs"
-                >
-                  <ChevronUp className="w-3 h-3 mr-1" />
-                  Close
-                </Button>
+          {/* Expanded State */}
+          {isExpanded && (
+            <div className="border-t border-gray-100">
+              <div className="p-4 space-y-4">
+                <div className="max-h-40 overflow-y-auto">
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    {currentTip.tip_description}
+                  </p>
+                </div>
                 
-                <div className="flex space-x-2">
-                  {availableTips.length > 1 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={getNewTip}
-                      className="text-xs"
-                    >
-                      New Tip
-                    </Button>
-                  )}
+                <div className="flex items-center justify-between pt-2">
                   <Button
+                    variant="outline"
                     size="sm"
-                    onClick={markAsRead}
-                    className="text-xs bg-green-600 hover:bg-green-700"
+                    onClick={() => setIsExpanded(false)}
+                    className="text-xs"
                   >
-                    <CheckCircle className="w-3 h-3 mr-1" />
-                    Mark as Read
+                    <ChevronUp className="w-3 h-3 mr-1" />
+                    Close
                   </Button>
+                  
+                  <div className="flex space-x-2">
+                    {availableTips.length > 1 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={getNewTip}
+                        className="text-xs"
+                      >
+                        New Tip
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      onClick={markAsRead}
+                      className="text-xs bg-green-600 hover:bg-green-700"
+                    >
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      Mark as Read
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
