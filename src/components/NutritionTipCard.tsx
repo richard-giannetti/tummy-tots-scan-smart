@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
@@ -88,9 +87,11 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
 
         setAvailableTips(appropriateTips);
 
-        // Load read tips from localStorage
+        // Load read tips from localStorage with proper type casting
         const savedReadTips = localStorage.getItem(`readTips_${user?.id}`);
-        const readTipIds = savedReadTips ? new Set(JSON.parse(savedReadTips)) : new Set();
+        const readTipIds = savedReadTips 
+          ? new Set<number>(JSON.parse(savedReadTips) as number[]) 
+          : new Set<number>();
         setReadTips(readTipIds);
 
         // Find unread tips
