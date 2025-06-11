@@ -41,101 +41,57 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
     const fetchTips = async () => {
       try {
         setIsLoading(true);
-        console.log('Starting tips fetch process...');
-        console.log('User:', user?.id);
-        console.log('Supabase client initialized:', !!supabase);
+        console.log('Fetching tips from Supabase...');
         
-        // Try multiple approaches to fetch tips
-        console.log('Attempting basic select query...');
-        const { data: tips, error, count } = await supabase
+        // Simple query without count to avoid potential issues
+        const { data: tips, error } = await supabase
           .from('tips')
-          .select('*', { count: 'exact' });
+          .select('tip_id, tip_title, tip_description, tip_age')
+          .order('tip_id');
 
-        console.log('Query completed with results:');
-        console.log('- Data:', tips);
-        console.log('- Error:', error);
-        console.log('- Count:', count);
-        console.log('- Data type:', typeof tips);
-        console.log('- Is array:', Array.isArray(tips));
+        console.log('Tips query result:', { tips, error });
 
         if (error) {
-          console.error('Supabase query error:', error);
-          
-          // Try alternative query approach
-          console.log('Trying alternative query approach...');
-          try {
-            const { data: altTips, error: altError } = await supabase
-              .from('tips')
-              .select('tip_id, tip_title, tip_description, tip_age');
-            
-            console.log('Alternative query result:', { altTips, altError });
-            
-            if (!altError && altTips) {
-              setAvailableTips(altTips);
-              if (altTips.length > 0) {
-                const randomTip = altTips[Math.floor(Math.random() * altTips.length)];
-                setCurrentTip(randomTip);
-                console.log('Using alternative query result, selected tip:', randomTip);
-              }
-            }
-          } catch (altErr) {
-            console.error('Alternative query also failed:', altErr);
-          }
-          
+          console.error('Error fetching tips:', error);
           setIsLoading(false);
           return;
         }
 
-        console.log('Processing successful query result...');
-        console.log('Tips array length:', tips?.length || 0);
-        
         if (tips && tips.length > 0) {
-          console.log('First tip sample:', tips[0]);
+          console.log(`Successfully fetched ${tips.length} tips`);
           setAvailableTips(tips);
 
-          // Load read tips from localStorage with proper type casting
+          // Load read tips from localStorage
           const savedReadTips = localStorage.getItem(`readTips_${user?.id}`);
           const readTipIds = savedReadTips 
             ? new Set<number>(JSON.parse(savedReadTips) as number[]) 
             : new Set<number>();
           setReadTips(readTipIds);
 
-          console.log('Read tips from localStorage:', readTipIds);
-
           // Find unread tips
           const unreadTips = tips.filter(tip => !readTipIds.has(tip.tip_id));
-          console.log('Unread tips count:', unreadTips.length);
           
           if (unreadTips.length > 0) {
-            // Select random unread tip
             const randomTip = unreadTips[Math.floor(Math.random() * unreadTips.length)];
-            console.log('Selected unread tip:', randomTip);
             setCurrentTip(randomTip);
           } else {
-            // If all tips are read, show a random one anyway
             const randomTip = tips[Math.floor(Math.random() * tips.length)];
-            console.log('All tips read, selected random tip:', randomTip);
             setCurrentTip(randomTip);
           }
         } else {
-          console.log('No tips found in query result');
-          console.log('Raw response data:', tips);
+          console.log('No tips found in database');
         }
 
       } catch (error) {
-        console.error('Catch block - Error in fetchTips:', error);
-        console.error('Error type:', typeof error);
-        console.error('Error details:', JSON.stringify(error, null, 2));
+        console.error('Error in fetchTips:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
     if (user) {
-      console.log('User authenticated, fetching tips...');
       fetchTips();
     } else {
-      console.log('No user found, skipping tips fetch');
       setIsLoading(false);
     }
   }, [user]);
