@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
@@ -188,6 +189,9 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
           {/* Section Header Inside Card */}
           <div className="flex items-center justify-between p-4 border-b border-gray-100">
             <div className="flex items-center">
+              <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center mr-3">
+                <BookOpen className="w-4 h-4 text-white" />
+              </div>
               <h2 className="text-xl font-bold text-gray-800">
                 Tips for {babyProfile?.name || 'Your Baby'}
               </h2>
@@ -202,9 +206,6 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2 mb-2">
-                  <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center flex-shrink-0">
-                    <BookOpen className="w-4 h-4 text-white" />
-                  </div>
                   <Badge className={`text-xs border ${getAgeBadgeColor(currentTip.tip_age)}`}>
                     {currentTip.tip_age}
                   </Badge>
