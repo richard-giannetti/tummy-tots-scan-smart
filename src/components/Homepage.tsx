@@ -1,22 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { BabyProfileService, BabyProfile } from '@/services/babyProfileService';
-import { BabyProfileCard } from './BabyProfileCard';
-import { ScanButton } from './ScanButton';
-import { RecentScans } from './RecentScans';
-import { RecipeRecommendations } from './RecipeRecommendations';
-import { FoodFacts } from './FoodFacts';
-import { HeaderMenu } from './HeaderMenu';
 import { BottomNavigation } from './BottomNavigation';
-import { FeedingJourneyProgress } from './FeedingJourneyProgress';
-import { NutritionTipCard } from './NutritionTipCard';
-import { AchievementNotification } from './AchievementNotification';
-import { AchievementsModal } from './AchievementsModal';
 import { useGamification } from '@/hooks/useGamification';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { Award } from 'lucide-react';
+import { HomepageHeader } from './HomepageHeader';
+import { AchievementManager } from './AchievementManager';
+import { HomepageMainContent } from './HomepageMainContent';
 
 export const Homepage = () => {
   const { user, signOut } = useAuth();
@@ -182,80 +173,28 @@ export const Homepage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 pb-20">
-      {/* Achievement Notifications */}
-      {newAchievements.map((achievement, index) => (
-        <AchievementNotification
-          key={achievement.id}
-          achievement={achievement}
-          isVisible={true}
-          onClose={() => dismissAchievement(achievement.id)}
-        />
-      ))}
-
-      {/* Achievements Modal */}
-      <AchievementsModal
-        isOpen={showAchievements}
-        onClose={() => setShowAchievements(false)}
+      <AchievementManager
+        newAchievements={newAchievements}
+        showAchievements={showAchievements}
         achievements={achievements}
+        onCloseModal={() => setShowAchievements(false)}
+        onDismissAchievement={dismissAchievement}
       />
 
-      {/* Header with app title and menu */}
-      <div className="flex items-center justify-between p-4 bg-white/80 backdrop-blur-sm shadow-sm">
-        <div className="flex items-center">
-          <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center mr-3">
-            <span className="text-white font-bold text-sm">HT</span>
-          </div>
-          <h1 className="text-xl font-bold text-gray-800">Healthy Tummies</h1>
-        </div>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setShowAchievements(true)}
-            className="p-2 rounded-full bg-yellow-100 hover:bg-yellow-200 transition-colors"
-            title="View Achievements"
-          >
-            <Award className="w-5 h-5 text-yellow-600" />
-          </button>
-          <HeaderMenu
-            language={language}
-            onToggleLanguage={handleToggleLanguage}
-            onSignOut={handleSignOut}
-          />
-        </div>
-      </div>
+      <HomepageHeader
+        showAchievements={showAchievements}
+        setShowAchievements={setShowAchievements}
+        language={language}
+        onToggleLanguage={handleToggleLanguage}
+        onSignOut={handleSignOut}
+      />
       
-      <div className="container mx-auto px-4 py-6 space-y-6 max-w-4xl">
-        {/* Baby Profile Section */}
-        <BabyProfileCard
-          hasProfile={hasProfile}
-          babyProfile={babyProfile}
-          onProfileComplete={handleProfileComplete}
-        />
-
-        {/* Scan Button Section */}
-        <ScanButton babyName={babyProfile?.name} />
-
-        {/* Food Facts Section */}
-        <FoodFacts babyName={babyProfile?.name} />
-
-        {/* Recent Scans Section */}
-        <RecentScans />
-
-        {/* Recipe Recommendations Section */}
-        <RecipeRecommendations babyName={babyProfile?.name} />
-
-        {/* Nutrition Tip Card - placed before Feeding Journey */}
-        <NutritionTipCard babyProfile={babyProfile} />
-
-        {/* Gamification Progress */}
-        {progress && (
-          <FeedingJourneyProgress
-            currentLevel={progress.feeding_level}
-            totalPoints={progress.total_points}
-            levelProgress={progress.level_progress}
-            currentStreak={progress.current_streak}
-          />
-        )}
-      </div>
+      <HomepageMainContent
+        hasProfile={hasProfile}
+        babyProfile={babyProfile}
+        progress={progress}
+        onProfileComplete={handleProfileComplete}
+      />
 
       {/* Bottom Navigation */}
       <BottomNavigation currentRoute="/" />
