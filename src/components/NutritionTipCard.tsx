@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
@@ -27,27 +28,6 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
   const [readTips, setReadTips] = useState<Set<number>>(new Set());
   const [availableTips, setAvailableTips] = useState<Tip[]>([]);
 
-  // Calculate baby age in months
-  const calculateBabyAgeInMonths = (birthDate: string): number => {
-    const birth = new Date(birthDate);
-    const today = new Date();
-    const diffInMs = today.getTime() - birth.getTime();
-    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
-    return Math.floor(diffInDays / 30.44); // Average days per month
-  };
-
-  // Check if tip is age-appropriate
-  const isTipAgeAppropriate = (tipAge: string, babyAgeInMonths: number): boolean => {
-    // Parse age ranges like "0-6 months", "6-12 months", "12+ months"
-    const ageRangeMatch = tipAge.match(/(\d+)(?:-(\d+))?\s*months?/i);
-    if (!ageRangeMatch) return false;
-
-    const minAge = parseInt(ageRangeMatch[1]);
-    const maxAge = ageRangeMatch[2] ? parseInt(ageRangeMatch[2]) : Infinity;
-
-    return babyAgeInMonths >= minAge && babyAgeInMonths <= maxAge;
-  };
-
   // Get age badge color based on tip age
   const getAgeBadgeColor = (tipAge: string) => {
     if (tipAge.includes('0-6')) return 'bg-blue-100 text-blue-800 border-blue-200';
@@ -59,15 +39,10 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
   // Fetch tips from database
   useEffect(() => {
     const fetchTips = async () => {
-      if (!babyProfile?.birth_date) {
-        setIsLoading(false);
-        return;
-      }
-
       try {
         setIsLoading(true);
         
-        // Get all tips
+        // Get all tips (no age filtering)
         const { data: tips, error } = await supabase
           .from('tips')
           .select('*');
@@ -78,14 +53,7 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
           return;
         }
 
-        const babyAgeInMonths = calculateBabyAgeInMonths(babyProfile.birth_date);
-        
-        // Filter age-appropriate tips
-        const appropriateTips = tips?.filter(tip => 
-          isTipAgeAppropriate(tip.tip_age, babyAgeInMonths)
-        ) || [];
-
-        setAvailableTips(appropriateTips);
+        setAvailableTips(tips || []);
 
         // Load read tips from localStorage with proper type casting
         const savedReadTips = localStorage.getItem(`readTips_${user?.id}`);
@@ -95,15 +63,15 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
         setReadTips(readTipIds);
 
         // Find unread tips
-        const unreadTips = appropriateTips.filter(tip => !readTipIds.has(tip.tip_id));
+        const unreadTips = (tips || []).filter(tip => !readTipIds.has(tip.tip_id));
         
         if (unreadTips.length > 0) {
           // Select random unread tip
           const randomTip = unreadTips[Math.floor(Math.random() * unreadTips.length)];
           setCurrentTip(randomTip);
-        } else if (appropriateTips.length > 0) {
+        } else if ((tips || []).length > 0) {
           // If all tips are read, show a random one anyway
-          const randomTip = appropriateTips[Math.floor(Math.random() * appropriateTips.length)];
+          const randomTip = tips[Math.floor(Math.random() * tips.length)];
           setCurrentTip(randomTip);
         }
 
@@ -115,7 +83,7 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
     };
 
     fetchTips();
-  }, [babyProfile, user]);
+  }, [user]);
 
   // Mark tip as read
   const markAsRead = () => {
@@ -158,10 +126,6 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
     );
   }
 
-  if (!babyProfile?.birth_date) {
-    return null;
-  }
-
   if (!currentTip) {
     return (
       <Card className={`p-6 text-center ${className}`}>
@@ -172,7 +136,7 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
           <div>
             <h3 className="font-semibold text-gray-800 mb-1">Great job!</h3>
             <p className="text-sm text-gray-600">
-              You've read all nutrition tips for your baby's age. Check back as your little one grows!
+              You've read all nutrition tips available. Check back for new tips!
             </p>
           </div>
         </div>
