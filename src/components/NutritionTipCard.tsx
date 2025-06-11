@@ -1,0 +1,261 @@
+
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ChevronDown, ChevronUp, BookOpen, CheckCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { BabyProfile } from '@/services/babyProfileService';
+
+interface Tip {
+  tip_id: number;
+  tip_title: string;
+  tip_description: string;
+  tip_age: string;
+}
+
+interface NutritionTipCardProps {
+  babyProfile: BabyProfile | null;
+  className?: string;
+}
+
+export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCardProps) => {
+  const { user } = useAuth();
+  const [currentTip, setCurrentTip] = useState<Tip | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [readTips, setReadTips] = useState<Set<number>>(new Set());
+  const [availableTips, setAvailableTips] = useState<Tip[]>([]);
+
+  // Calculate baby age in months
+  const calculateBabyAgeInMonths = (birthDate: string): number => {
+    const birth = new Date(birthDate);
+    const today = new Date();
+    const diffInMs = today.getTime() - birth.getTime();
+    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+    return Math.floor(diffInDays / 30.44); // Average days per month
+  };
+
+  // Check if tip is age-appropriate
+  const isTipAgeAppropriate = (tipAge: string, babyAgeInMonths: number): boolean => {
+    // Parse age ranges like "0-6 months", "6-12 months", "12+ months"
+    const ageRangeMatch = tipAge.match(/(\d+)(?:-(\d+))?\s*months?/i);
+    if (!ageRangeMatch) return false;
+
+    const minAge = parseInt(ageRangeMatch[1]);
+    const maxAge = ageRangeMatch[2] ? parseInt(ageRangeMatch[2]) : Infinity;
+
+    return babyAgeInMonths >= minAge && babyAgeInMonths <= maxAge;
+  };
+
+  // Get age badge color based on tip age
+  const getAgeBadgeColor = (tipAge: string) => {
+    if (tipAge.includes('0-6')) return 'bg-blue-100 text-blue-800 border-blue-200';
+    if (tipAge.includes('6-12')) return 'bg-green-100 text-green-800 border-green-200';
+    if (tipAge.includes('12') || tipAge.includes('24')) return 'bg-orange-100 text-orange-800 border-orange-200';
+    return 'bg-gray-100 text-gray-800 border-gray-200';
+  };
+
+  // Fetch tips from database
+  useEffect(() => {
+    const fetchTips = async () => {
+      if (!babyProfile?.birth_date) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        
+        // Get all tips
+        const { data: tips, error } = await supabase
+          .from('tips')
+          .select('*');
+
+        if (error) {
+          console.error('Error fetching tips:', error);
+          setIsLoading(false);
+          return;
+        }
+
+        const babyAgeInMonths = calculateBabyAgeInMonths(babyProfile.birth_date);
+        
+        // Filter age-appropriate tips
+        const appropriateTips = tips?.filter(tip => 
+          isTipAgeAppropriate(tip.tip_age, babyAgeInMonths)
+        ) || [];
+
+        setAvailableTips(appropriateTips);
+
+        // Load read tips from localStorage
+        const savedReadTips = localStorage.getItem(`readTips_${user?.id}`);
+        const readTipIds = savedReadTips ? new Set(JSON.parse(savedReadTips)) : new Set();
+        setReadTips(readTipIds);
+
+        // Find unread tips
+        const unreadTips = appropriateTips.filter(tip => !readTipIds.has(tip.tip_id));
+        
+        if (unreadTips.length > 0) {
+          // Select random unread tip
+          const randomTip = unreadTips[Math.floor(Math.random() * unreadTips.length)];
+          setCurrentTip(randomTip);
+        } else if (appropriateTips.length > 0) {
+          // If all tips are read, show a random one anyway
+          const randomTip = appropriateTips[Math.floor(Math.random() * appropriateTips.length)];
+          setCurrentTip(randomTip);
+        }
+
+      } catch (error) {
+        console.error('Error in fetchTips:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTips();
+  }, [babyProfile, user]);
+
+  // Mark tip as read
+  const markAsRead = () => {
+    if (!currentTip || !user) return;
+
+    const newReadTips = new Set(readTips);
+    newReadTips.add(currentTip.tip_id);
+    setReadTips(newReadTips);
+    
+    // Save to localStorage
+    localStorage.setItem(`readTips_${user.id}`, JSON.stringify([...newReadTips]));
+
+    // Get next unread tip
+    const unreadTips = availableTips.filter(tip => !newReadTips.has(tip.tip_id));
+    if (unreadTips.length > 0) {
+      const randomTip = unreadTips[Math.floor(Math.random() * unreadTips.length)];
+      setCurrentTip(randomTip);
+      setIsExpanded(false);
+    }
+  };
+
+  // Get new tip
+  const getNewTip = () => {
+    if (availableTips.length <= 1) return;
+    
+    const otherTips = availableTips.filter(tip => tip.tip_id !== currentTip?.tip_id);
+    const randomTip = otherTips[Math.floor(Math.random() * otherTips.length)];
+    setCurrentTip(randomTip);
+    setIsExpanded(false);
+  };
+
+  if (isLoading) {
+    return (
+      <Card className={`p-4 ${className}`}>
+        <div className="animate-pulse">
+          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+        </div>
+      </Card>
+    );
+  }
+
+  if (!babyProfile?.birth_date) {
+    return null;
+  }
+
+  if (!currentTip) {
+    return (
+      <Card className={`p-6 text-center ${className}`}>
+        <div className="flex flex-col items-center space-y-3">
+          <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center">
+            <CheckCircle className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-800 mb-1">Great job!</h3>
+            <p className="text-sm text-gray-600">
+              You've read all nutrition tips for your baby's age. Check back as your little one grows!
+            </p>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className={`transition-all duration-300 ease-in-out hover:shadow-md ${className}`}>
+      <CardContent className="p-0">
+        {/* Collapsed State */}
+        <div 
+          className={`p-4 cursor-pointer transition-all duration-300 ${!isExpanded ? 'hover:bg-gray-50' : ''}`}
+          onClick={() => !isExpanded && setIsExpanded(true)}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center flex-shrink-0">
+                  <BookOpen className="w-4 h-4 text-white" />
+                </div>
+                <Badge className={`text-xs border ${getAgeBadgeColor(currentTip.tip_age)}`}>
+                  {currentTip.tip_age}
+                </Badge>
+              </div>
+              <h3 className="font-semibold text-gray-800 text-sm leading-tight">
+                {currentTip.tip_title}
+              </h3>
+              {!isExpanded && (
+                <p className="text-xs text-gray-500 mt-1">Tap to read more</p>
+              )}
+            </div>
+            {!isExpanded && (
+              <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0 ml-2" />
+            )}
+          </div>
+        </div>
+
+        {/* Expanded State */}
+        {isExpanded && (
+          <div className="border-t border-gray-100">
+            <div className="p-4 space-y-4">
+              <div className="max-h-40 overflow-y-auto">
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  {currentTip.tip_description}
+                </p>
+              </div>
+              
+              <div className="flex items-center justify-between pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsExpanded(false)}
+                  className="text-xs"
+                >
+                  <ChevronUp className="w-3 h-3 mr-1" />
+                  Close
+                </Button>
+                
+                <div className="flex space-x-2">
+                  {availableTips.length > 1 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={getNewTip}
+                      className="text-xs"
+                    >
+                      New Tip
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    onClick={markAsRead}
+                    className="text-xs bg-green-600 hover:bg-green-700"
+                  >
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    Mark as Read
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};

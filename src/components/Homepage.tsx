@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { BabyProfileService, BabyProfile } from '@/services/babyProfileService';
@@ -9,6 +10,7 @@ import { FoodFacts } from './FoodFacts';
 import { HeaderMenu } from './HeaderMenu';
 import { BottomNavigation } from './BottomNavigation';
 import { FeedingJourneyProgress } from './FeedingJourneyProgress';
+import { NutritionTipCard } from './NutritionTipCard';
 import { AchievementNotification } from './AchievementNotification';
 import { AchievementsModal } from './AchievementsModal';
 import { useGamification } from '@/hooks/useGamification';
@@ -241,7 +243,10 @@ export const Homepage = () => {
         {/* Recipe Recommendations Section */}
         <RecipeRecommendations babyName={babyProfile?.name} />
 
-        {/* Gamification Progress - moved after recipes */}
+        {/* Nutrition Tip Card - placed before Feeding Journey */}
+        <NutritionTipCard babyProfile={babyProfile} />
+
+        {/* Gamification Progress */}
         {progress && (
           <FeedingJourneyProgress
             currentLevel={progress.feeding_level}

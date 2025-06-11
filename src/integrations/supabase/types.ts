@@ -295,6 +295,27 @@ export type Database = {
           },
         ]
       }
+      tips: {
+        Row: {
+          tip_age: string | null
+          tip_description: string | null
+          tip_id: number
+          tip_title: string | null
+        }
+        Insert: {
+          tip_age?: string | null
+          tip_description?: string | null
+          tip_id: number
+          tip_title?: string | null
+        }
+        Update: {
+          tip_age?: string | null
+          tip_description?: string | null
+          tip_id?: number
+          tip_title?: string | null
+        }
+        Relationships: []
+      }
       user_progress: {
         Row: {
           achievements: string[]
