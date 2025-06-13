@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp, BookOpen, CheckCircle } from 'lucide-react';
+import { ChevronDown, BookOpen, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { BabyProfile } from '@/services/babyProfileService';
 
@@ -132,6 +132,9 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
         <Card className="p-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
+              <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center mr-3">
+                <BookOpen className="w-4 h-4 text-white" />
+              </div>
               <h2 className="text-xl font-bold text-gray-800">
                 Tips for {babyProfile?.name || 'Your Baby'}
               </h2>
@@ -152,6 +155,9 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
+              <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center mr-3">
+                <BookOpen className="w-4 h-4 text-white" />
+              </div>
               <h2 className="text-xl font-bold text-gray-800">
                 Tips for {babyProfile?.name || 'Your Baby'}
               </h2>
@@ -198,10 +204,10 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
             </div>
           </div>
 
-          {/* Collapsed State */}
+          {/* Collapsed/Expanded State */}
           <div 
             className={`p-4 cursor-pointer transition-all duration-300 ${!isExpanded ? 'hover:bg-gray-50' : ''}`}
-            onClick={() => !isExpanded && setIsExpanded(true)}
+            onClick={() => setIsExpanded(!isExpanded)}
           >
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
@@ -217,13 +223,11 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
                   <p className="text-xs text-gray-500 mt-1">Tap to read more</p>
                 )}
               </div>
-              {!isExpanded && (
-                <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0 ml-2" />
-              )}
+              <ChevronDown className={`w-5 h-5 text-gray-400 flex-shrink-0 ml-2 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
             </div>
           </div>
 
-          {/* Expanded State */}
+          {/* Expanded Content */}
           {isExpanded && (
             <div className="border-t border-gray-100">
               <div className="p-4 space-y-4">
@@ -233,23 +237,16 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
                   </p>
                 </div>
                 
-                <div className="flex items-center justify-between pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsExpanded(false)}
-                    className="text-xs"
-                  >
-                    <ChevronUp className="w-3 h-3 mr-1" />
-                    Close
-                  </Button>
-                  
+                <div className="flex items-center justify-end pt-2">
                   <div className="flex space-x-2">
                     {availableTips.length > 1 && (
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={getNewTip}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          getNewTip();
+                        }}
                         className="text-xs"
                       >
                         New Tip
@@ -257,7 +254,10 @@ export const NutritionTipCard = ({ babyProfile, className = '' }: NutritionTipCa
                     )}
                     <Button
                       size="sm"
-                      onClick={markAsRead}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        markAsRead();
+                      }}
                       className="text-xs bg-green-600 hover:bg-green-700"
                     >
                       <CheckCircle className="w-3 h-3 mr-1" />
