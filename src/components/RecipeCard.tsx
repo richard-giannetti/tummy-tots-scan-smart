@@ -1,116 +1,106 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { memo } from 'react';
 import { Clock, Users, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Recipe, RecipesService } from '@/services/recipes';
 import { toast } from '@/hooks/use-toast';
+import { useRecipeInteraction, useRecipeFavoriteStatus } from '@/hooks/useRecipes';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface RecipeCardProps {
   recipe: Recipe;
 }
 
-export const RecipeCard = ({ recipe }: RecipeCardProps) => {
+export const RecipeCard = memo(({ recipe }: RecipeCardProps) => {
   const navigate = useNavigate();
-  const [isFavorited, setIsFavorited] = useState(false);
-  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
-  const [isTried, setIsTried] = useState(false);
-  const [isTogglingTried, setIsTogglingTried] = useState(false);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    checkFavoriteStatus();
-    checkTriedStatus();
-  }, [recipe._id]);
+  // Use React Query for status checks
+  const { data: favoriteData } = useRecipeFavoriteStatus(recipe._id);
+  const { data: interactionData } = useRecipeInteraction(recipe._id);
 
-  const checkFavoriteStatus = async () => {
-    try {
-      const result = await RecipesService.isRecipeFavorited(recipe._id);
-      if (result.success) {
-        setIsFavorited(result.isFavorited || false);
+  const isFavorited = favoriteData?.isFavorited || false;
+  const isTried = interactionData?.interaction?.tried || false;
+
+  // Mutations for optimistic updates
+  const favoriteMutation = useMutation({
+    mutationFn: () => RecipesService.toggleRecipeFavorite(recipe._id),
+    onMutate: async () => {
+      // Optimistic update
+      await queryClient.cancelQueries({ queryKey: ['recipe-favorite', recipe._id] });
+      const previousData = queryClient.getQueryData(['recipe-favorite', recipe._id]);
+      queryClient.setQueryData(['recipe-favorite', recipe._id], {
+        success: true,
+        isFavorited: !isFavorited
+      });
+      return { previousData };
+    },
+    onError: (err, variables, context) => {
+      // Revert on error
+      if (context?.previousData) {
+        queryClient.setQueryData(['recipe-favorite', recipe._id], context.previousData);
       }
-    } catch (error) {
-      console.error('Error checking favorite status:', error);
-    }
-  };
-
-  const checkTriedStatus = async () => {
-    try {
-      const interaction = await RecipesService.getRecipeInteraction(recipe._id);
-      if (interaction.success && interaction.interaction) {
-        setIsTried(interaction.interaction.tried);
-      }
-    } catch (error) {
-      console.error('Error checking tried status:', error);
-    }
-  };
-
-  const handleFavoriteToggle = async (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent navigation when clicking favorite button
-    
-    try {
-      setIsTogglingFavorite(true);
-      const result = await RecipesService.toggleRecipeFavorite(recipe._id);
-      
-      if (result.success) {
-        const newFavoriteStatus = !isFavorited;
-        setIsFavorited(newFavoriteStatus);
-        
-        toast({
-          title: newFavoriteStatus ? "Added to favorites!" : "Removed from favorites",
-          description: newFavoriteStatus ? "Recipe saved to your favorites" : "Recipe removed from favorites",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: result.error || "Failed to update favorite status",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Error toggling favorite:', error);
       toast({
         title: "Error",
         description: "Failed to update favorite status",
         variant: "destructive",
       });
-    } finally {
-      setIsTogglingFavorite(false);
-    }
-  };
-
-  const handleTriedToggle = async (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent navigation when clicking tried button
-    
-    try {
-      setIsTogglingTried(true);
-      const newTriedStatus = !isTried;
-      
-      const result = await RecipesService.updateRecipeInteraction(
-        recipe._id, 
-        newTriedStatus
-      );
-      
+    },
+    onSuccess: (result) => {
       if (result.success) {
-        setIsTried(newTriedStatus);
+        const newFavoriteStatus = !isFavorited;
         toast({
-          title: newTriedStatus ? "Marked as tried!" : "Unmarked as tried",
-          description: newTriedStatus ? "Great! Keep track of your tried recipes" : "Recipe unmarked as tried",
+          title: newFavoriteStatus ? "Added to favorites!" : "Removed from favorites",
+          description: newFavoriteStatus ? "Recipe saved to your favorites" : "Recipe removed from favorites",
         });
-      } else {
-        toast({
-          title: "Error",
-          description: result.error || "Failed to update tried status",
-          variant: "destructive",
-        });
+        // Invalidate related queries
+        queryClient.invalidateQueries({ queryKey: ['recipes', 'favorites'] });
       }
-    } catch (error) {
-      console.error('Error toggling tried status:', error);
+    },
+  });
+
+  const triedMutation = useMutation({
+    mutationFn: (newTriedStatus: boolean) => 
+      RecipesService.updateRecipeInteraction(recipe._id, newTriedStatus),
+    onMutate: async (newTriedStatus) => {
+      // Optimistic update
+      await queryClient.cancelQueries({ queryKey: ['recipe-interaction', recipe._id] });
+      const previousData = queryClient.getQueryData(['recipe-interaction', recipe._id]);
+      queryClient.setQueryData(['recipe-interaction', recipe._id], {
+        success: true,
+        interaction: { tried: newTriedStatus }
+      });
+      return { previousData };
+    },
+    onError: (err, variables, context) => {
+      // Revert on error
+      if (context?.previousData) {
+        queryClient.setQueryData(['recipe-interaction', recipe._id], context.previousData);
+      }
       toast({
         title: "Error",
         description: "Failed to update tried status",
         variant: "destructive",
       });
-    } finally {
-      setIsTogglingTried(false);
-    }
+    },
+    onSuccess: (result, newTriedStatus) => {
+      if (result.success) {
+        toast({
+          title: newTriedStatus ? "Marked as tried!" : "Unmarked as tried",
+          description: newTriedStatus ? "Great! Keep track of your tried recipes" : "Recipe unmarked as tried",
+        });
+      }
+    },
+  });
+
+  const handleFavoriteToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    favoriteMutation.mutate();
+  };
+
+  const handleTriedToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    triedMutation.mutate(!isTried);
   };
 
   const formatIngredients = (ingredients: any): string => {
@@ -162,7 +152,7 @@ export const RecipeCard = ({ recipe }: RecipeCardProps) => {
         <div className="absolute top-2 right-2">
           <button 
             onClick={handleFavoriteToggle}
-            disabled={isTogglingFavorite}
+            disabled={favoriteMutation.isPending}
             className={`w-8 h-8 backdrop-blur-sm rounded-full flex items-center justify-center transition-colors ${
               isFavorited 
                 ? 'bg-red-500 text-white' 
@@ -205,17 +195,19 @@ export const RecipeCard = ({ recipe }: RecipeCardProps) => {
         <div className="mt-3 pt-3 border-t border-gray-100">
           <button 
             onClick={handleTriedToggle}
-            disabled={isTogglingTried}
+            disabled={triedMutation.isPending}
             className={`text-xs font-medium transition-colors ${
               isTried 
                 ? 'text-green-600 hover:text-green-700' 
                 : 'text-pink-600 hover:text-pink-700'
             }`}
           >
-            {isTogglingTried ? '...' : (isTried ? '✓ Tried' : 'Mark as Tried')}
+            {triedMutation.isPending ? '...' : (isTried ? '✓ Tried' : 'Mark as Tried')}
           </button>
         </div>
       </div>
     </div>
   );
-};
+});
+
+RecipeCard.displayName = 'RecipeCard';

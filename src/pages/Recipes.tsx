@@ -1,84 +1,62 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Search, Filter, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { RecipesService, Recipe } from '@/services/recipes';
+import { Recipe } from '@/services/recipes';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { RecipeCard } from '@/components/RecipeCard';
+import { useRecipes, useSearchRecipes, useFavoriteRecipes } from '@/hooks/useRecipes';
+import { useDebounce } from '@/hooks/useDebounce';
 
 export const Recipes = () => {
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'alphabetical' | 'popular' | 'recent'>('alphabetical');
   const [filterBy, setFilterBy] = useState<'all' | 'favorites'>('all');
-  const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchRecipes();
-  }, [filterBy]);
+  // Debounce search term to reduce API calls
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchTerm.trim()) {
-        handleSearch();
-      } else {
-        fetchRecipes();
-      }
-    }, 300);
+  // Use React Query hooks for data fetching
+  const { data: allRecipesData, isLoading: isLoadingAll } = useRecipes(1, 50);
+  const { data: searchData, isLoading: isSearching } = useSearchRecipes(debouncedSearchTerm);
+  const { data: favoritesData, isLoading: isLoadingFavorites } = useFavoriteRecipes();
 
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  const fetchRecipes = async () => {
-    try {
-      setLoading(true);
-      let result;
-      
-      if (filterBy === 'favorites') {
-        result = await RecipesService.getFavoriteRecipes();
-      } else {
-        result = await RecipesService.getRecipes(1, 50);
-      }
-      
-      if (result.success && result.recipes) {
-        setRecipes(result.recipes);
-      }
-    } catch (error) {
-      console.error('Error fetching recipes:', error);
-    } finally {
-      setLoading(false);
+  // Determine which data to use and loading state
+  const { recipes, isLoading } = useMemo(() => {
+    if (debouncedSearchTerm.trim()) {
+      return {
+        recipes: searchData?.recipes || [],
+        isLoading: isSearching
+      };
     }
-  };
-
-  const handleSearch = async () => {
-    if (!searchTerm.trim()) return;
     
-    try {
-      setIsSearching(true);
-      const result = await RecipesService.searchRecipes(searchTerm);
-      
-      if (result.success && result.recipes) {
-        setRecipes(result.recipes);
-      }
-    } catch (error) {
-      console.error('Error searching recipes:', error);
-    } finally {
-      setIsSearching(false);
+    if (filterBy === 'favorites') {
+      return {
+        recipes: favoritesData?.recipes || [],
+        isLoading: isLoadingFavorites
+      };
     }
-  };
+    
+    return {
+      recipes: allRecipesData?.recipes || [],
+      isLoading: isLoadingAll
+    };
+  }, [debouncedSearchTerm, filterBy, searchData, favoritesData, allRecipesData, isSearching, isLoadingFavorites, isLoadingAll]);
 
-  const sortedRecipes = [...recipes].sort((a, b) => {
-    switch (sortBy) {
-      case 'alphabetical':
-        return a.title.localeCompare(b.title);
-      case 'recent':
-        return b._id.localeCompare(a._id);
-      default:
-        return 0;
-    }
-  });
+  // Memoize sorted recipes to avoid re-sorting on every render
+  const sortedRecipes = useMemo(() => {
+    return [...recipes].sort((a, b) => {
+      switch (sortBy) {
+        case 'alphabetical':
+          return a.title.localeCompare(b.title);
+        case 'recent':
+          return b._id.localeCompare(a._id);
+        default:
+          return 0;
+      }
+    });
+  }, [recipes, sortBy]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 pb-20">
@@ -149,7 +127,7 @@ export const Recipes = () => {
 
       {/* Content */}
       <div className="container mx-auto px-4 py-6">
-        {loading || isSearching ? (
+        {isLoading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="bg-white rounded-2xl p-4 shadow-sm animate-pulse">
@@ -159,7 +137,7 @@ export const Recipes = () => {
               </div>
             ))}
           </div>
-        ) : recipes.length === 0 ? (
+        ) : sortedRecipes.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">
               {filterBy === 'favorites' ? '❤️' : '🔍'}
