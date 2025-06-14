@@ -127,39 +127,51 @@ export const RecipeRecommendations = ({
             <ChefHat className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <h4 className="text-lg font-semibold text-gray-800 mb-2">No recipes available</h4>
             <p className="text-gray-600 text-sm">Check back later for delicious recipe recommendations</p>
-          </div> : recipes.map(recipe => <div key={recipe._id} onClick={() => handleRecipeClick(recipe)} className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer group overflow-hidden">
-              <div className="p-4">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    <img src={getRecipeImage(recipe)} alt={recipe.title} className="w-full h-full object-cover rounded-xl" onError={e => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-                const parent = target.parentElement;
-                if (parent) {
-                  parent.className = 'w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0';
-                  parent.innerHTML = '<svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>';
-                }
-              }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-gray-800 text-sm truncate">
-                      {recipe.title}
-                    </h4>
-                    <div className="flex items-center space-x-3 mt-1">
-                      <div className="flex items-center text-xs text-gray-500">
-                        <Clock className="w-3 h-3 mr-1" />
-                        {recipe.time || 'Quick'}
-                      </div>
-                      <div className="flex items-center text-xs text-gray-500">
-                        <Users className="w-3 h-3 mr-1" />
-                        {recipe.servings ? `${recipe.servings} servings` : 'Family'}
-                      </div>
+          </div> : recipes.map(recipe => (
+          <div
+            key={recipe._id}
+            onClick={() => handleRecipeClick(recipe)}
+            className="bg-white rounded-2xl shadow-sm border border-gray-200 hover:shadow-md hover:border-orange-300 hover:bg-orange-50/50 transition-all cursor-pointer group overflow-hidden"
+          >
+            <div className="p-4">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <img
+                    src={getRecipeImage(recipe)}
+                    alt={recipe.title}
+                    className="w-full h-full object-cover rounded-xl"
+                    onError={e => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const parent = target.parentElement;
+                      if (parent) {
+                        parent.className = 'w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0';
+                        parent.innerHTML =
+                          '<svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>';
+                      }
+                    }}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-gray-800 text-sm truncate">
+                    {recipe.title}
+                  </h4>
+                  <div className="flex items-center space-x-3 mt-1">
+                    <div className="flex items-center text-xs text-gray-500">
+                      <Clock className="w-3 h-3 mr-1" />
+                      {recipe.time || 'Quick'}
+                    </div>
+                    <div className="flex items-center text-xs text-gray-500">
+                      <Users className="w-3 h-3 mr-1" />
+                      {recipe.servings ? `${recipe.servings} servings` : 'Family'}
                     </div>
                   </div>
-                  <Eye className="w-4 h-4 text-gray-400 flex-shrink-0" />
                 </div>
+                <Eye className="w-4 h-4 text-gray-400 flex-shrink-0" />
               </div>
-            </div>)}
+            </div>
+          </div>
+        ))}
       </div>
     </div>;
 };
