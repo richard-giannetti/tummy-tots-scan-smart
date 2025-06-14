@@ -15,7 +15,7 @@ export const useCameraState = () => {
     toast({
       title: "📹 Camera Ready!",
       description: "Ready to scan barcodes",
-      duration: 2000,
+      duration: 1500,
     });
   };
 
@@ -33,7 +33,7 @@ export const useCameraState = () => {
         title: "⚠️ Permission Required",
         description: "Camera access needed to scan",
         variant: "destructive",
-        duration: 3000,
+        duration: 2000,
       });
       return;
     }

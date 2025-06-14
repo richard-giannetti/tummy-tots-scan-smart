@@ -30,7 +30,7 @@ export const useScanEvents = ({
     toast({
       title: "✅ Barcode Found!",
       description: `Code: ${code.slice(0, 12)}...`,
-      duration: 2000,
+      duration: 1500,
     });
   };
 
@@ -61,7 +61,7 @@ export const useScanEvents = ({
         title: errorTitle,
         description: errorMessage,
         variant: "destructive",
-        duration: 3000,
+        duration: 2000,
       });
     }
   };
