@@ -197,6 +197,42 @@ export type Database = {
         }
         Relationships: []
       }
+      recipe_interactions: {
+        Row: {
+          baby_profile_id: string | null
+          created_at: string
+          id: string
+          rating: number | null
+          recipe_id: string
+          tried: boolean
+          tried_date: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          baby_profile_id?: string | null
+          created_at?: string
+          id?: string
+          rating?: number | null
+          recipe_id: string
+          tried?: boolean
+          tried_date?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          baby_profile_id?: string | null
+          created_at?: string
+          id?: string
+          rating?: number | null
+          recipe_id?: string
+          tried?: boolean
+          tried_date?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       recipes: {
         Row: {
           _id: string | null

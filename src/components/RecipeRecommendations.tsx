@@ -14,6 +14,7 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
   const navigate = useNavigate();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [babyProfile, setBabyProfile] = useState<BabyProfile | null>(null);
+  const [triedRecipesCount, setTriedRecipesCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,12 +26,18 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
         const profileResult = await BabyProfileService.getBabyProfile();
         if (profileResult.success && profileResult.profile) {
           setBabyProfile(profileResult.profile);
-          
-          // Then fetch recipes
-          const recipesResult = await RecipesService.getRecipes(1, 3);
-          if (recipesResult.success && recipesResult.recipes) {
-            setRecipes(recipesResult.recipes);
-          }
+        }
+        
+        // Fetch recipes
+        const recipesResult = await RecipesService.getRecipes(1, 3);
+        if (recipesResult.success && recipesResult.recipes) {
+          setRecipes(recipesResult.recipes);
+        }
+
+        // Fetch tried recipes count
+        const triedCountResult = await RecipesService.getTriedRecipesCount();
+        if (triedCountResult.success && triedCountResult.count !== undefined) {
+          setTriedRecipesCount(triedCountResult.count);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -92,7 +99,7 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
 
       <div className="mb-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl">
         <p className="text-sm text-gray-700">
-          <span className="font-semibold">📊 Progress:</span> Discover nutritious recipes perfect for your baby's age
+          <span className="font-semibold">📊 Progress:</span> You've tried {triedRecipesCount} recipe{triedRecipesCount !== 1 ? 's' : ''} so far! Keep exploring nutritious options for your baby.
         </p>
       </div>
 

@@ -108,4 +108,65 @@ export class RecipesService {
       return { success: false, error: error.message || 'An unexpected error occurred' };
     }
   }
+
+  /**
+   * Get count of tried recipes for current user
+   */
+  static async getTriedRecipesCount(): Promise<{ success: boolean; count?: number; error?: string }> {
+    try {
+      const { count, error } = await supabase
+        .from('recipe_interactions')
+        .select('*', { count: 'exact', head: true })
+        .eq('tried', true);
+
+      if (error) {
+        console.error('RecipesService: Error fetching tried recipes count:', error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, count: count || 0 };
+    } catch (error: any) {
+      console.error('RecipesService: Unexpected error fetching tried recipes count:', error);
+      return { success: false, error: error.message || 'An unexpected error occurred' };
+    }
+  }
+
+  /**
+   * Mark recipe as tried or untried
+   */
+  static async updateRecipeInteraction(recipeId: string, tried: boolean, rating?: number): Promise<RecipeInteractionResponse> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        return { success: false, error: 'User not authenticated' };
+      }
+
+      const interactionData = {
+        user_id: user.id,
+        recipe_id: recipeId,
+        tried,
+        rating,
+        tried_date: tried ? new Date().toISOString().split('T')[0] : null,
+      };
+
+      const { data: interaction, error } = await supabase
+        .from('recipe_interactions')
+        .upsert(interactionData, {
+          onConflict: 'user_id,recipe_id'
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('RecipesService: Error updating recipe interaction:', error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, interaction };
+    } catch (error: any) {
+      console.error('RecipesService: Unexpected error updating recipe interaction:', error);
+      return { success: false, error: error.message || 'An unexpected error occurred' };
+    }
+  }
 }
