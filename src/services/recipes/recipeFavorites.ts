@@ -18,7 +18,7 @@ export class RecipeFavoritesService {
         .from('recipe_favorites')
         .select(`
           recipe_id,
-          recipes!inner (*)
+          recipes!fk_recipe_favorites_recipe_id (*)
         `)
         .eq('user_id', user.id);
 

@@ -216,7 +216,15 @@ export type Database = {
           recipe_id?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_recipe_favorites_recipe_id"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["_id"]
+          },
+        ]
       }
       recipe_interactions: {
         Row: {
