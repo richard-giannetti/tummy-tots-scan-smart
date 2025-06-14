@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { Clock, Users, Star, Heart } from 'lucide-react';
+import { Clock, Users, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Recipe, RecipesService } from '@/services/recipesService';
 import { toast } from '@/hooks/use-toast';
@@ -152,15 +151,10 @@ export const RecipeCard = ({ recipe }: RecipeCardProps) => {
           </p>
         )}
         
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+        <div className="mt-3 pt-3 border-t border-gray-100">
           <button className="text-xs text-pink-600 font-medium hover:text-pink-700 transition-colors">
             Mark as Tried
           </button>
-          <div className="flex items-center space-x-1">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Star key={star} className="w-3 h-3 text-gray-300 hover:text-yellow-400 cursor-pointer transition-colors" />
-            ))}
-          </div>
         </div>
       </div>
     </div>
