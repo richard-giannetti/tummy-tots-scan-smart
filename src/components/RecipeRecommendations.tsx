@@ -17,6 +17,17 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
   const [triedRecipesCount, setTriedRecipesCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
+  const fetchTriedRecipesCount = async () => {
+    console.log('Fetching tried recipes count...');
+    const triedCountResult = await RecipesService.getTriedRecipesCount();
+    if (triedCountResult.success && triedCountResult.count !== undefined) {
+      console.log('Tried recipes count fetched:', triedCountResult.count);
+      setTriedRecipesCount(triedCountResult.count);
+    } else {
+      console.error('Failed to fetch tried recipes count:', triedCountResult.error);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -35,10 +46,7 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
         }
 
         // Fetch tried recipes count
-        const triedCountResult = await RecipesService.getTriedRecipesCount();
-        if (triedCountResult.success && triedCountResult.count !== undefined) {
-          setTriedRecipesCount(triedCountResult.count);
-        }
+        await fetchTriedRecipesCount();
       } catch (error) {
         console.error('Error fetching data:', error);
         toast({
@@ -52,6 +60,26 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
     };
 
     fetchData();
+  }, []);
+
+  // Add an interval to periodically check for updates to the tried recipes count
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchTriedRecipesCount();
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Listen for focus events to refresh count when user returns to the tab
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log('Window focused, refreshing tried recipes count');
+      fetchTriedRecipesCount();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
   const handleRecipeClick = (recipe: Recipe) => {
