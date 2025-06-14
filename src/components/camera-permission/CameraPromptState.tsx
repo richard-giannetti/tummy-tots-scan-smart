@@ -1,8 +1,9 @@
-
 import React from 'react';
 import { Camera, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { AlertTriangle } from 'lucide-react';
+import { isIosSafari } from '@/utils/isIosSafari';
 
 interface CameraPromptStateProps {
   onRequestPermission: () => void;
@@ -11,6 +12,20 @@ interface CameraPromptStateProps {
 export const CameraPromptState: React.FC<CameraPromptStateProps> = ({
   onRequestPermission
 }) => {
+  const [showIosInfo, setShowIosInfo] = React.useState(false);
+
+  React.useEffect(() => {
+    // Only show this info if we're on iOS Safari, and not already dismissed
+    if (isIosSafari() && !localStorage.getItem('iosCameraInfoShown')) {
+      setShowIosInfo(true);
+    }
+  }, []);
+
+  const handleDismissInfo = () => {
+    setShowIosInfo(false);
+    localStorage.setItem('iosCameraInfoShown', '1');
+  };
+
   return (
     <Card>
       <CardContent className="p-6 text-center">
@@ -22,6 +37,27 @@ export const CameraPromptState: React.FC<CameraPromptStateProps> = ({
           We need access to your camera to scan product barcodes. Your camera feed stays private and secure on your device.
         </p>
         
+        {/* iOS Safari Info */}
+        {showIosInfo && (
+          <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mb-4 flex items-start text-left mx-auto max-w-sm shadow transition">
+            <AlertTriangle className="w-6 h-6 text-yellow-500 mt-0.5 mr-3 flex-shrink-0" />
+            <div className="flex-1">
+              <span className="block text-yellow-800 text-sm font-medium mb-1">iOS Privacy Note</span>
+              <span className="text-yellow-700 text-xs">
+                On iPhone or iPad, you may be asked to grant camera permission every time you scan. 
+                This is a privacy requirement by Apple and is not caused by this app.
+              </span>
+              <button
+                onClick={handleDismissInfo}
+                className="mt-2 text-xs text-yellow-700 underline hover:text-yellow-900 block"
+                tabIndex={0}
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-4">
           <Button
             onClick={onRequestPermission}
