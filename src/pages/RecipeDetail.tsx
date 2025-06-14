@@ -11,8 +11,10 @@ export const RecipeDetail = () => {
   const [loading, setLoading] = useState(true);
   const [tried, setTried] = useState(false);
   const [rating, setRating] = useState(0);
+  const [isFavorited, setIsFavorited] = useState(false);
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
   const [updatingTried, setUpdatingTried] = useState(false);
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -29,6 +31,8 @@ export const RecipeDetail = () => {
         setRecipe(result.recipe);
         // Load the current interaction status for this recipe
         await loadRecipeInteraction(recipeId);
+        // Load favorite status
+        await loadFavoriteStatus(recipeId);
       } else {
         toast({
           title: "Error",
@@ -58,6 +62,17 @@ export const RecipeDetail = () => {
       }
     } catch (error) {
       console.error('Error loading recipe interaction:', error);
+    }
+  };
+
+  const loadFavoriteStatus = async (recipeId: string) => {
+    try {
+      const result = await RecipesService.isRecipeFavorited(recipeId);
+      if (result.success) {
+        setIsFavorited(result.isFavorited || false);
+      }
+    } catch (error) {
+      console.error('Error loading favorite status:', error);
     }
   };
 
@@ -96,6 +111,40 @@ export const RecipeDetail = () => {
       });
     } finally {
       setUpdatingTried(false);
+    }
+  };
+
+  const handleFavoriteToggle = async () => {
+    if (!recipe) return;
+    
+    try {
+      setIsTogglingFavorite(true);
+      const result = await RecipesService.toggleRecipeFavorite(recipe._id);
+      
+      if (result.success) {
+        const newFavoriteStatus = !isFavorited;
+        setIsFavorited(newFavoriteStatus);
+        
+        toast({
+          title: newFavoriteStatus ? "Added to favorites!" : "Removed from favorites",
+          description: newFavoriteStatus ? "Recipe saved to your favorites" : "Recipe removed from favorites",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to update favorite status",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update favorite status",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTogglingFavorite(false);
     }
   };
 
@@ -324,8 +373,16 @@ export const RecipeDetail = () => {
             >
               <Share2 className="w-5 h-5" />
             </button>
-            <button className="w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors">
-              <Heart className="w-5 h-5" />
+            <button 
+              onClick={handleFavoriteToggle}
+              disabled={isTogglingFavorite}
+              className={`w-10 h-10 backdrop-blur-sm rounded-full flex items-center justify-center transition-colors ${
+                isFavorited 
+                  ? 'bg-red-500 text-white' 
+                  : 'bg-white/80 hover:bg-white'
+              }`}
+            >
+              <Heart className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`} />
             </button>
           </div>
         </div>

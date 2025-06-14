@@ -1,8 +1,9 @@
 
-import React from 'react';
-import { Clock, Users, Star } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Clock, Users, Star, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Recipe } from '@/services/recipesService';
+import { Recipe, RecipesService } from '@/services/recipesService';
+import { toast } from '@/hooks/use-toast';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -10,6 +11,57 @@ interface RecipeCardProps {
 
 export const RecipeCard = ({ recipe }: RecipeCardProps) => {
   const navigate = useNavigate();
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+
+  useEffect(() => {
+    checkFavoriteStatus();
+  }, [recipe._id]);
+
+  const checkFavoriteStatus = async () => {
+    try {
+      const result = await RecipesService.isRecipeFavorited(recipe._id);
+      if (result.success) {
+        setIsFavorited(result.isFavorited || false);
+      }
+    } catch (error) {
+      console.error('Error checking favorite status:', error);
+    }
+  };
+
+  const handleFavoriteToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation when clicking favorite button
+    
+    try {
+      setIsTogglingFavorite(true);
+      const result = await RecipesService.toggleRecipeFavorite(recipe._id);
+      
+      if (result.success) {
+        const newFavoriteStatus = !isFavorited;
+        setIsFavorited(newFavoriteStatus);
+        
+        toast({
+          title: newFavoriteStatus ? "Added to favorites!" : "Removed from favorites",
+          description: newFavoriteStatus ? "Recipe saved to your favorites" : "Recipe removed from favorites",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to update favorite status",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update favorite status",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTogglingFavorite(false);
+    }
+  };
 
   const formatIngredients = (ingredients: any): string => {
     if (!ingredients) return '';
@@ -58,8 +110,16 @@ export const RecipeCard = ({ recipe }: RecipeCardProps) => {
           />
         </div>
         <div className="absolute top-2 right-2">
-          <button className="w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors">
-            <Star className="w-4 h-4 text-gray-600" />
+          <button 
+            onClick={handleFavoriteToggle}
+            disabled={isTogglingFavorite}
+            className={`w-8 h-8 backdrop-blur-sm rounded-full flex items-center justify-center transition-colors ${
+              isFavorited 
+                ? 'bg-red-500 text-white' 
+                : 'bg-white/80 text-gray-600 hover:bg-white'
+            }`}
+          >
+            <Heart className={`w-4 h-4 ${isFavorited ? 'fill-current' : ''}`} />
           </button>
         </div>
       </div>

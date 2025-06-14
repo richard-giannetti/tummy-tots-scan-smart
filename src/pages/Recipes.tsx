@@ -11,12 +11,13 @@ export const Recipes = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'alphabetical' | 'popular' | 'recent'>('alphabetical');
+  const [filterBy, setFilterBy] = useState<'all' | 'favorites'>('all');
   const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchRecipes();
-  }, []);
+  }, [filterBy]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -33,7 +34,13 @@ export const Recipes = () => {
   const fetchRecipes = async () => {
     try {
       setLoading(true);
-      const result = await RecipesService.getRecipes(1, 50);
+      let result;
+      
+      if (filterBy === 'favorites') {
+        result = await RecipesService.getFavoriteRecipes();
+      } else {
+        result = await RecipesService.getRecipes(1, 50);
+      }
       
       if (result.success && result.recipes) {
         setRecipes(result.recipes);
@@ -92,7 +99,7 @@ export const Recipes = () => {
         
         {/* Search and Filter */}
         <div className="px-4 pb-4">
-          <div className="flex gap-3">
+          <div className="flex gap-3 mb-3">
             <div className="flex-1 relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
@@ -113,6 +120,30 @@ export const Recipes = () => {
               <option value="recent">Recent</option>
             </select>
           </div>
+          
+          {/* Filter by favorites */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setFilterBy('all')}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                filterBy === 'all'
+                  ? 'bg-pink-500 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              All Recipes
+            </button>
+            <button
+              onClick={() => setFilterBy('favorites')}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                filterBy === 'favorites'
+                  ? 'bg-pink-500 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              ❤️ Favorites
+            </button>
+          </div>
         </div>
       </div>
 
@@ -130,9 +161,18 @@ export const Recipes = () => {
           </div>
         ) : recipes.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">No recipes found</h3>
-            <p className="text-gray-600">Try adjusting your search terms</p>
+            <div className="text-6xl mb-4">
+              {filterBy === 'favorites' ? '❤️' : '🔍'}
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              {filterBy === 'favorites' ? 'No favorite recipes yet' : 'No recipes found'}
+            </h3>
+            <p className="text-gray-600">
+              {filterBy === 'favorites' 
+                ? 'Start adding recipes to your favorites!' 
+                : 'Try adjusting your search terms'
+              }
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
