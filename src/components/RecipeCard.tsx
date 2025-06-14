@@ -36,13 +36,14 @@ export const RecipeCard = ({ recipe }: RecipeCardProps) => {
   };
 
   const getRecipeImage = (): string => {
-    return recipe.link || '/placeholder.svg';
+    // Use the recipe's link field as image URL, fallback to placeholder
+    return recipe.link && recipe.link !== '' ? recipe.link : '/placeholder.svg';
   };
 
   return (
     <div 
       className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer group overflow-hidden"
-      onClick={() => navigate(`/recipe/${recipe._id}`)}
+      onClick={() => navigate(`/recipes/${recipe._id}`)}
     >
       <div className="relative">
         <div className="w-full h-32 bg-gray-100 overflow-hidden">

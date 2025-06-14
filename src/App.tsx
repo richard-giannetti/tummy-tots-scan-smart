@@ -34,7 +34,7 @@ const App = () => (
             <Route path="/scan-history" element={<ScanHistory />} />
             <Route path="/food-facts" element={<FoodFacts />} />
             <Route path="/recipes" element={<Recipes />} />
-            <Route path="/recipe/:id" element={<RecipeDetail />} />
+            <Route path="/recipes/:id" element={<RecipeDetail />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
