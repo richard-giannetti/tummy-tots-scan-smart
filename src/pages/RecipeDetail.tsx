@@ -166,6 +166,16 @@ export const RecipeDetail = () => {
     }
   };
 
+  const handleBackClick = () => {
+    // Check if there's a previous page in history
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      // Fallback to homepage if no history
+      navigate('/');
+    }
+  };
+
   const renderIngredients = (ingredients: any) => {
     if (!ingredients) return null;
     
@@ -274,10 +284,10 @@ export const RecipeDetail = () => {
           <div className="text-6xl mb-4">😕</div>
           <h2 className="text-xl font-semibold text-gray-800 mb-2">Recipe not found</h2>
           <button 
-            onClick={() => navigate('/recipes')}
+            onClick={() => navigate('/')}
             className="text-pink-600 hover:text-pink-700 font-medium"
           >
-            Back to recipes
+            Go to homepage
           </button>
         </div>
       </div>
@@ -302,7 +312,7 @@ export const RecipeDetail = () => {
         {/* Header Controls */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-center">
           <button 
-            onClick={() => navigate(-1)}
+            onClick={handleBackClick}
             className="w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
