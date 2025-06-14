@@ -79,12 +79,6 @@ export const RecentScans = () => {
     return 'text-red-600 bg-red-100';
   };
 
-  const getScoreBorder = (score: number) => {
-    if (score >= 80) return 'border-green-200';
-    if (score >= 60) return 'border-yellow-200';
-    return 'border-red-200';
-  };
-
   const formatScanDate = (dateString: string) => {
     const scanDate = new Date(dateString);
     const now = new Date();
@@ -162,13 +156,8 @@ export const RecentScans = () => {
         </div>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="flex items-center space-x-4 p-3 rounded-xl border-2 border-gray-200 animate-pulse">
-              <div className="w-8 h-8 bg-gray-200 rounded"></div>
-              <div className="flex-1 space-y-2">
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-              </div>
-              <div className="w-10 h-6 bg-gray-200 rounded-full"></div>
+            <div key={i} className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer group overflow-hidden animate-pulse">
+              <div className="w-full h-16 bg-gray-200 rounded"></div>
             </div>
           ))}
         </div>
@@ -206,31 +195,33 @@ export const RecentScans = () => {
           <div
             key={scan.id}
             onClick={() => handleScanClick(scan)}
-            className={`flex items-center space-x-4 p-3 rounded-xl border-2 ${getScoreBorder(scan.average_score)} hover:shadow-sm transition-all cursor-pointer`}
+            className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer group overflow-hidden"
           >
-            <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
-              {getProductImage(scan) ? (
-                <img 
-                  src={getProductImage(scan)} 
-                  alt={scan.product_name || 'Product'}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <Package className="w-4 h-4 text-gray-400" />
-              )}
+            <div className="flex items-center space-x-4 p-4">
+              <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
+                {getProductImage(scan) ? (
+                  <img 
+                    src={getProductImage(scan)} 
+                    alt={scan.product_name || 'Product'}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Package className="w-6 h-6 text-gray-400" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-semibold text-gray-800 text-sm truncate">
+                  {scan.product_name || 'Unknown Product'}
+                </h4>
+                <p className="text-xs text-gray-500 truncate">
+                  {scan.brand && `${scan.brand} • `}{formatScanDate(scan.scan_date)}
+                </p>
+              </div>
+              <div className={`px-3 py-1 rounded-full text-sm font-bold ${getScoreColor(scan.average_score)} flex-shrink-0`}>
+                {Math.round(scan.average_score)}
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
             </div>
-            <div className="flex-1">
-              <h4 className="font-medium text-gray-800 text-sm">
-                {scan.product_name || 'Unknown Product'}
-              </h4>
-              <p className="text-xs text-gray-500">
-                {scan.brand && `${scan.brand} • `}{formatScanDate(scan.scan_date)}
-              </p>
-            </div>
-            <div className={`px-3 py-1 rounded-full text-sm font-bold ${getScoreColor(scan.average_score)}`}>
-              {Math.round(scan.average_score)}
-            </div>
-            <ChevronRight className="w-4 h-4 text-gray-400" />
           </div>
         ))}
       </div>
