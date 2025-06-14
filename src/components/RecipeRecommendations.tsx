@@ -62,6 +62,11 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
     navigate('/recipes');
   };
 
+  const getRecipeImage = (recipe: Recipe): string => {
+    // Use the recipe's link field as image URL, fallback to placeholder
+    return recipe.link && recipe.link !== '' ? recipe.link : '/placeholder.svg';
+  };
+
   if (loading) {
     return (
       <div className="bg-white rounded-2xl p-6 shadow-sm">
@@ -119,8 +124,21 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
             >
               <div className="p-4">
                 <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <ChefHat className="w-6 h-6 text-orange-500" />
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    <img 
+                      src={getRecipeImage(recipe)} 
+                      alt={recipe.title}
+                      className="w-full h-full object-cover rounded-xl"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.className = 'w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0';
+                          parent.innerHTML = '<svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>';
+                        }
+                      }}
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-gray-800 text-sm truncate">
