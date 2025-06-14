@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 
@@ -226,8 +227,7 @@ export class RecipesService {
       const { data: favorites, error } = await supabase
         .from('recipe_favorites')
         .select(`
-          recipe_id,
-          recipes!inner (*)
+          recipes (*)
         `)
         .eq('user_id', user.id);
 
@@ -236,7 +236,7 @@ export class RecipesService {
         return { success: false, error: error.message };
       }
 
-      const recipes = favorites?.map(fav => (fav as any).recipes) || [];
+      const recipes = favorites?.map(fav => (fav as any).recipes).filter(recipe => recipe) || [];
       return { success: true, recipes };
     } catch (error: any) {
       console.error('RecipesService: Unexpected error fetching favorite recipes:', error);
