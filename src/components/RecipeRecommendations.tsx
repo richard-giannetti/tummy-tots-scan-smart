@@ -92,7 +92,7 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
 
       <div className="mb-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl">
         <p className="text-sm text-gray-700">
-          <span className="font-semibold">📊 Progress:</span> Discover nutritious recipes perfect for your baby's age
+          <span className="font-semibold">🏆 Progress:</span> Discover nutritious recipes perfect for your baby's age
         </p>
       </div>
 
@@ -122,11 +122,11 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
                     <div className="flex items-center space-x-3 mt-1">
                       <div className="flex items-center text-xs text-gray-500">
                         <Clock className="w-3 h-3 mr-1" />
-                        {recipe.prep_time || 'Quick'}
+                        {recipe.time || 'Quick'}
                       </div>
                       <div className="flex items-center text-xs text-gray-500">
                         <Users className="w-3 h-3 mr-1" />
-                        {recipe.age_months_min}+ months
+                        {recipe.servings ? `${recipe.servings} servings` : 'Family'}
                       </div>
                     </div>
                   </div>
