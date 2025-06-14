@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChefHat, ArrowRight, Clock, Users } from 'lucide-react';
+import { ChefHat, Eye, Clock, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { RecipesService, Recipe } from '@/services/recipesService';
 import { BabyProfileService, BabyProfile } from '@/services/babyProfileService';
@@ -156,7 +156,7 @@ export const RecipeRecommendations = ({
                       </div>
                     </div>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <Eye className="w-4 h-4 text-gray-400 flex-shrink-0" />
                 </div>
               </div>
             </div>)}
