@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Clock, ChevronRight, Package } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -197,30 +198,32 @@ export const RecentScans = () => {
             onClick={() => handleScanClick(scan)}
             className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer group overflow-hidden"
           >
-            <div className="flex items-center space-x-4 p-4">
-              <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
-                {getProductImage(scan) ? (
-                  <img 
-                    src={getProductImage(scan)} 
-                    alt={scan.product_name || 'Product'}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <Package className="w-6 h-6 text-gray-400" />
-                )}
+            <div className="p-4">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
+                  {getProductImage(scan) ? (
+                    <img 
+                      src={getProductImage(scan)} 
+                      alt={scan.product_name || 'Product'}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Package className="w-6 h-6 text-gray-400" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-gray-800 text-sm truncate">
+                    {scan.product_name || 'Unknown Product'}
+                  </h4>
+                  <p className="text-xs text-gray-500 truncate">
+                    {scan.brand && `${scan.brand} • `}{formatScanDate(scan.scan_date)}
+                  </p>
+                </div>
+                <div className={`px-3 py-1 rounded-full text-sm font-bold ${getScoreColor(scan.average_score)} flex-shrink-0`}>
+                  {Math.round(scan.average_score)}
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
               </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="font-semibold text-gray-800 text-sm truncate">
-                  {scan.product_name || 'Unknown Product'}
-                </h4>
-                <p className="text-xs text-gray-500 truncate">
-                  {scan.brand && `${scan.brand} • `}{formatScanDate(scan.scan_date)}
-                </p>
-              </div>
-              <div className={`px-3 py-1 rounded-full text-sm font-bold ${getScoreColor(scan.average_score)} flex-shrink-0`}>
-                {Math.round(scan.average_score)}
-              </div>
-              <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
             </div>
           </div>
         ))}
