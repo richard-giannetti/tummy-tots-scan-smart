@@ -92,7 +92,7 @@ export const RecipeRecommendations = ({ babyName }: RecipeRecommendationsProps) 
 
       <div className="mb-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl">
         <p className="text-sm text-gray-700">
-          <span className="font-semibold">🏆 Progress:</span> Discover nutritious recipes perfect for your baby's age
+          <span className="font-semibold">📊 Progress:</span> Discover nutritious recipes perfect for your baby's age
         </p>
       </div>
 
