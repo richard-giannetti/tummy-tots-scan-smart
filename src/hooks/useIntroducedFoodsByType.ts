@@ -11,6 +11,37 @@ interface FoodTypeProgress {
   percentage: number;
 }
 
+const MAIN_FOOD_TYPES = ['Fruit', 'Vegetable', 'Dairy', 'Meat'];
+
+const categorizeFoodType = (foodType: string | null | undefined): string => {
+  if (!foodType) return 'Other types';
+  
+  const normalizedType = foodType.toLowerCase().trim();
+  
+  // Check for exact matches first
+  for (const mainType of MAIN_FOOD_TYPES) {
+    if (normalizedType === mainType.toLowerCase()) {
+      return mainType;
+    }
+  }
+  
+  // Check for partial matches or variations
+  if (normalizedType.includes('fruit') || normalizedType.includes('berry')) {
+    return 'Fruit';
+  }
+  if (normalizedType.includes('vegetable') || normalizedType.includes('veggie')) {
+    return 'Vegetable';
+  }
+  if (normalizedType.includes('dairy') || normalizedType.includes('milk') || normalizedType.includes('cheese') || normalizedType.includes('yogurt')) {
+    return 'Dairy';
+  }
+  if (normalizedType.includes('meat') || normalizedType.includes('protein') || normalizedType.includes('chicken') || normalizedType.includes('beef') || normalizedType.includes('fish')) {
+    return 'Meat';
+  }
+  
+  return 'Other types';
+};
+
 export const useIntroducedFoodsByType = () => {
   const { user } = useAuth();
   const [progressByType, setProgressByType] = useState<FoodTypeProgress[]>([]);
@@ -44,27 +75,31 @@ export const useIntroducedFoodsByType = () => {
         if (result.success && result.data) {
           const foods = result.data;
           
-          // Group foods by type
+          // Group foods by categorized type
           const typeGroups: { [key: string]: { introduced: number; total: number } } = {};
           
           foods.forEach(food => {
-            const foodType = food.foodType || 'Other';
-            if (!typeGroups[foodType]) {
-              typeGroups[foodType] = { introduced: 0, total: 0 };
+            const categorizedType = categorizeFoodType(food.foodType);
+            if (!typeGroups[categorizedType]) {
+              typeGroups[categorizedType] = { introduced: 0, total: 0 };
             }
-            typeGroups[foodType].total++;
+            typeGroups[categorizedType].total++;
             if (food.introduced) {
-              typeGroups[foodType].introduced++;
+              typeGroups[categorizedType].introduced++;
             }
           });
 
-          // Convert to array and calculate percentages
-          const progressData = Object.entries(typeGroups).map(([foodType, data]) => ({
-            foodType,
-            introduced: data.introduced,
-            total: data.total,
-            percentage: data.total > 0 ? (data.introduced / data.total) * 100 : 0
-          }));
+          // Convert to array and calculate percentages, ensuring all main types are included
+          const allTypes = [...MAIN_FOOD_TYPES, 'Other types'];
+          const progressData = allTypes.map(foodType => {
+            const data = typeGroups[foodType] || { introduced: 0, total: 0 };
+            return {
+              foodType,
+              introduced: data.introduced,
+              total: data.total,
+              percentage: data.total > 0 ? (data.introduced / data.total) * 100 : 0
+            };
+          }).filter(item => item.total > 0); // Only show types that have foods
 
           // Sort by percentage descending, then by total count descending
           progressData.sort((a, b) => {
