@@ -1,8 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Share2, Heart, Clock, Users, Star, Check } from 'lucide-react';
 import { RecipesService, Recipe } from '@/services/recipesService';
 import { toast } from '@/hooks/use-toast';
+import { RecipeDetailHeader } from '@/components/recipe-detail/RecipeDetailHeader';
+import { RecipeDetailInfo } from '@/components/recipe-detail/RecipeDetailInfo';
+import { RecipeIngredients } from '@/components/recipe-detail/RecipeIngredients';
+import { RecipeInstructions } from '@/components/recipe-detail/RecipeInstructions';
 
 export const RecipeDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -10,9 +14,7 @@ export const RecipeDetail = () => {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [tried, setTried] = useState(false);
-  const [rating, setRating] = useState(0);
   const [isFavorited, setIsFavorited] = useState(false);
-  const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
   const [updatingTried, setUpdatingTried] = useState(false);
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
 
@@ -29,9 +31,7 @@ export const RecipeDetail = () => {
       
       if (result.success && result.recipe) {
         setRecipe(result.recipe);
-        // Load the current interaction status for this recipe
         await loadRecipeInteraction(recipeId);
-        // Load favorite status
         await loadFavoriteStatus(recipeId);
       } else {
         toast({
@@ -58,7 +58,6 @@ export const RecipeDetail = () => {
       const interaction = await RecipesService.getRecipeInteraction(recipeId);
       if (interaction.success && interaction.interaction) {
         setTried(interaction.interaction.tried);
-        setRating(interaction.interaction.rating || 0);
       }
     } catch (error) {
       console.error('Error loading recipe interaction:', error);
@@ -85,8 +84,7 @@ export const RecipeDetail = () => {
       
       const result = await RecipesService.updateRecipeInteraction(
         recipe._id, 
-        newTriedStatus, 
-        rating > 0 ? rating : undefined
+        newTriedStatus
       );
       
       if (result.success) {
@@ -148,57 +146,6 @@ export const RecipeDetail = () => {
     }
   };
 
-  const handleRating = async (newRating: number) => {
-    if (!recipe) return;
-    
-    try {
-      const result = await RecipesService.updateRecipeInteraction(
-        recipe._id, 
-        tried, 
-        newRating
-      );
-      
-      if (result.success) {
-        setRating(newRating);
-        const ratingLabels = {
-          1: "Baby didn't like it",
-          2: "Not a favorite", 
-          3: "It was okay",
-          4: "Baby enjoyed it",
-          5: "Baby loved it!"
-        };
-        
-        toast({
-          title: "Recipe rated!",
-          description: ratingLabels[newRating as keyof typeof ratingLabels],
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: result.error || "Failed to save rating",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Error saving rating:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save rating",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const toggleIngredientCheck = (index: number) => {
-    const newChecked = new Set(checkedIngredients);
-    if (newChecked.has(index)) {
-      newChecked.delete(index);
-    } else {
-      newChecked.add(index);
-    }
-    setCheckedIngredients(newChecked);
-  };
-
   const handleShare = () => {
     if (navigator.share && recipe) {
       navigator.share({
@@ -216,95 +163,11 @@ export const RecipeDetail = () => {
   };
 
   const handleBackClick = () => {
-    // Check if there's a previous page in history
     if (window.history.length > 1) {
       navigate(-1);
     } else {
-      // Fallback to homepage if no history
       navigate('/');
     }
-  };
-
-  const renderIngredients = (ingredients: any) => {
-    if (!ingredients) return null;
-    
-    // Handle Json type - could be array or string
-    let ingredientArray: any[] = [];
-    
-    if (Array.isArray(ingredients)) {
-      ingredientArray = ingredients;
-    } else if (typeof ingredients === 'string') {
-      try {
-        const parsed = JSON.parse(ingredients);
-        ingredientArray = Array.isArray(parsed) ? parsed : [parsed];
-      } catch {
-        ingredientArray = [ingredients];
-      }
-    } else if (typeof ingredients === 'object') {
-      ingredientArray = [ingredients];
-    }
-    
-    return ingredientArray.map((ingredient, index) => {
-      const ingredientText = typeof ingredient === 'string' ? ingredient : 
-        ingredient?.name || ingredient?.ingredient || JSON.stringify(ingredient);
-      
-      return (
-        <div 
-          key={index}
-          className={`flex items-center p-3 rounded-lg border transition-all cursor-pointer ${
-            checkedIngredients.has(index) 
-              ? 'bg-green-50 border-green-200' 
-              : 'bg-white border-gray-200 hover:border-pink-200'
-          }`}
-          onClick={() => toggleIngredientCheck(index)}
-        >
-          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center mr-3 transition-colors ${
-            checkedIngredients.has(index)
-              ? 'bg-green-500 border-green-500'
-              : 'border-gray-300'
-          }`}>
-            {checkedIngredients.has(index) && <Check className="w-3 h-3 text-white" />}
-          </div>
-          <span className={`flex-1 ${checkedIngredients.has(index) ? 'line-through text-gray-500' : 'text-gray-800'}`}>
-            {ingredientText}
-          </span>
-        </div>
-      );
-    });
-  };
-
-  const renderMethod = (method: any) => {
-    if (!method) return null;
-    
-    // Handle Json type - could be array or string
-    let methodArray: any[] = [];
-    
-    if (Array.isArray(method)) {
-      methodArray = method;
-    } else if (typeof method === 'string') {
-      try {
-        const parsed = JSON.parse(method);
-        methodArray = Array.isArray(parsed) ? parsed : [parsed];
-      } catch {
-        methodArray = [method];
-      }
-    } else if (typeof method === 'object') {
-      methodArray = [method];
-    }
-    
-    return methodArray.map((step, index) => {
-      const stepText = typeof step === 'string' ? step : 
-        step?.instruction || step?.step || JSON.stringify(step);
-      
-      return (
-        <div key={index} className="flex gap-4 p-4 bg-white rounded-lg border border-gray-200">
-          <div className="w-8 h-8 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0">
-            {index + 1}
-          </div>
-          <p className="text-gray-800 leading-relaxed">{stepText}</p>
-        </div>
-      );
-    });
   };
 
   if (loading) {
@@ -345,123 +208,26 @@ export const RecipeDetail = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
-      {/* Hero Image */}
-      <div className="relative h-64 bg-gray-200 overflow-hidden">
-        <img 
-          src={recipe.link || '/placeholder.svg'} 
-          alt={recipe.title}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = '/placeholder.svg';
-          }}
-        />
-        <div className="absolute inset-0 bg-black bg-opacity-20"></div>
-        
-        {/* Header Controls */}
-        <div className="absolute top-4 left-4 right-4 flex justify-between items-center">
-          <button 
-            onClick={handleBackClick}
-            className="w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div className="flex gap-2">
-            <button 
-              onClick={handleShare}
-              className="w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors"
-            >
-              <Share2 className="w-5 h-5" />
-            </button>
-            <button 
-              onClick={handleFavoriteToggle}
-              disabled={isTogglingFavorite}
-              className={`w-10 h-10 backdrop-blur-sm rounded-full flex items-center justify-center transition-colors ${
-                isFavorited 
-                  ? 'bg-red-500 text-white' 
-                  : 'bg-white/80 hover:bg-white'
-              }`}
-            >
-              <Heart className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`} />
-            </button>
-          </div>
-        </div>
-      </div>
+      <RecipeDetailHeader
+        recipe={recipe}
+        isFavorited={isFavorited}
+        isTogglingFavorite={isTogglingFavorite}
+        onBackClick={handleBackClick}
+        onShare={handleShare}
+        onFavoriteToggle={handleFavoriteToggle}
+      />
 
-      {/* Content */}
       <div className="container mx-auto px-4 py-6 max-w-4xl space-y-8">
-        {/* Recipe Info */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm">
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">{recipe.title}</h1>
-          <p className="text-gray-600 mb-4">{recipe.description}</p>
-          
-          <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-6">
-            <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
-              <span>{recipe.time || 'N/A'}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Users className="w-4 h-4" />
-              <span>{recipe.servings || 1} serving{(recipe.servings || 1) > 1 ? 's' : ''}</span>
-            </div>
-          </div>
+        <RecipeDetailInfo
+          recipe={recipe}
+          tried={tried}
+          updatingTried={updatingTried}
+          onTriedToggle={handleTriedToggle}
+        />
 
-          {/* User Interactions */}
-          <div className="border-t border-gray-200 pt-6">
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-              <button
-                onClick={handleTriedToggle}
-                disabled={updatingTried}
-                className={`px-6 py-3 rounded-xl font-medium transition-colors disabled:opacity-50 ${
-                  tried 
-                    ? 'bg-green-100 text-green-700 hover:bg-green-200' 
-                    : 'bg-pink-100 text-pink-700 hover:bg-pink-200'
-                }`}
-              >
-                {updatingTried ? '...' : (tried ? '✓ Tried this recipe' : 'Mark as tried')}
-              </button>
-              
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Rate this recipe:</span>
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      onClick={() => handleRating(star)}
-                      className="transition-colors"
-                    >
-                      <Star 
-                        className={`w-5 h-5 ${
-                          star <= rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                        }`} 
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <RecipeIngredients ingredients={recipe.ingredients} />
 
-        {/* Ingredients */}
-        {recipe.ingredients && (
-          <div className="bg-white rounded-2xl p-6 shadow-sm">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Ingredients</h2>
-            <div className="space-y-2">
-              {renderIngredients(recipe.ingredients)}
-            </div>
-          </div>
-        )}
-
-        {/* Instructions */}
-        {recipe.method && (
-          <div className="bg-white rounded-2xl p-6 shadow-sm">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Instructions</h2>
-            <div className="space-y-4">
-              {renderMethod(recipe.method)}
-            </div>
-          </div>
-        )}
+        <RecipeInstructions method={recipe.method} />
       </div>
     </div>
   );
