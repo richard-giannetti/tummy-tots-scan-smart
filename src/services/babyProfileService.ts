@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface BabyProfile {
@@ -100,26 +99,65 @@ export class BabyProfileService {
         return { success: false, error: 'No authenticated user found' };
       }
 
-      // Try to update existing profile first, then insert if none exists
-      const { data: profile, error } = await supabase
+      // Check if profile already exists
+      const { data: existingProfile } = await supabase
         .from('baby_profiles')
-        .upsert({
-          user_id: user.id,
-          name: profileData.name,
-          birth_date: profileData.birth_date,
-          weight_kg: profileData.weight_kg,
-          feeding_stage: profileData.feeding_stage,
-          allergies: profileData.allergies,
-          dietary_restrictions: profileData.dietary_restrictions,
-          dietary_preferences: profileData.dietary_preferences,
-          health_conditions: profileData.health_conditions,
-          feeding_goals: profileData.feeding_goals,
-          feeding_type: profileData.feeding_type,
-          medical_conditions: profileData.medical_conditions,
-          avatar_url: profileData.avatar_url
-        })
-        .select()
+        .select('id')
+        .eq('user_id', user.id)
         .single();
+
+      let profile;
+      let error;
+
+      if (existingProfile) {
+        // Update existing profile
+        const result = await supabase
+          .from('baby_profiles')
+          .update({
+            name: profileData.name,
+            birth_date: profileData.birth_date,
+            weight_kg: profileData.weight_kg,
+            feeding_stage: profileData.feeding_stage,
+            allergies: profileData.allergies,
+            dietary_restrictions: profileData.dietary_restrictions,
+            dietary_preferences: profileData.dietary_preferences,
+            health_conditions: profileData.health_conditions,
+            feeding_goals: profileData.feeding_goals,
+            feeding_type: profileData.feeding_type,
+            medical_conditions: profileData.medical_conditions,
+            avatar_url: profileData.avatar_url
+          })
+          .eq('user_id', user.id)
+          .select()
+          .single();
+        
+        profile = result.data;
+        error = result.error;
+      } else {
+        // Insert new profile
+        const result = await supabase
+          .from('baby_profiles')
+          .insert({
+            user_id: user.id,
+            name: profileData.name,
+            birth_date: profileData.birth_date,
+            weight_kg: profileData.weight_kg,
+            feeding_stage: profileData.feeding_stage,
+            allergies: profileData.allergies,
+            dietary_restrictions: profileData.dietary_restrictions,
+            dietary_preferences: profileData.dietary_preferences,
+            health_conditions: profileData.health_conditions,
+            feeding_goals: profileData.feeding_goals,
+            feeding_type: profileData.feeding_type,
+            medical_conditions: profileData.medical_conditions,
+            avatar_url: profileData.avatar_url
+          })
+          .select()
+          .single();
+        
+        profile = result.data;
+        error = result.error;
+      }
 
       if (error) {
         console.error('BabyProfileService: Error saving baby profile:', error);
