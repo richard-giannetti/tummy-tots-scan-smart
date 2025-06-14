@@ -70,10 +70,6 @@ export const BottomNavigation = ({ currentRoute }: BottomNavigationProps) => {
                   <IconComponent className="w-3.5 h-3.5" />
                 </div>
                 <span className="text-[10px] font-medium mt-0.5 tracking-wide leading-tight">{item.label}</span>
-                {/* Active indicator */}
-                {item.active && (
-                  <div className="absolute -top-0.5 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-pink-500 rounded-full"></div>
-                )}
               </button>
             );
           })}
