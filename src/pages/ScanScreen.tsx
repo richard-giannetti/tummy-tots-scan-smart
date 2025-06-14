@@ -1,7 +1,7 @@
 
 import React from 'react';
 import ScanLoadingScreen from '@/components/ScanLoadingScreen';
-import { CameraPermissionManager } from '@/components/CameraPermissionManager';
+import { EnhancedCameraPermissionManager } from '@/components/EnhancedCameraPermissionManager';
 import ScanHeader from '@/components/scan/ScanHeader';
 import BarcodeScanner from '@/components/scan/BarcodeScanner';
 import DemoScanSection from '@/components/scan/DemoScanSection';
@@ -40,10 +40,11 @@ const ScanScreen = () => {
       <main className="max-w-md mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[calc(100vh-80px)]">
         <div className="w-full space-y-6">
           
-          {/* Camera Scanner Section */}
-          <CameraPermissionManager
+          {/* Camera Scanner Section with Enhanced Permission Management */}
+          <EnhancedCameraPermissionManager
             onPermissionGranted={handlePermissionGranted}
             onPermissionDenied={handlePermissionDenied}
+            showPermissionStatus={hasPermission}
           >
             <BarcodeScanner
               isCameraActive={isCameraActive}
@@ -57,7 +58,7 @@ const ScanScreen = () => {
               onProcessScan={handleProcessScan}
               onScanAgain={handleScanAgain}
             />
-          </CameraPermissionManager>
+          </EnhancedCameraPermissionManager>
 
           {/* Test Scan Section */}
           <DemoScanSection onTestScan={handleTestScan} />
