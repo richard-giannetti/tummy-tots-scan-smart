@@ -22,8 +22,9 @@ export const useScanLogic = () => {
     
     // Show success message for first-time users
     toast({
-      title: "Camera Ready!",
-      description: "You can now scan barcodes. Permission will be remembered for next time.",
+      title: "📹 Camera Ready!",
+      description: "Ready to scan barcodes",
+      duration: 2000,
     });
   };
 
@@ -38,9 +39,10 @@ export const useScanLogic = () => {
     if (!hasPermission) {
       setScanError('Camera permission is required to scan barcodes');
       toast({
-        title: "Permission Required",
-        description: "Please grant camera permission to start scanning",
+        title: "⚠️ Permission Required",
+        description: "Camera access needed to scan",
         variant: "destructive",
+        duration: 3000,
       });
       return;
     }
@@ -68,8 +70,9 @@ export const useScanLogic = () => {
     }
     
     toast({
-      title: "Barcode Detected!",
-      description: `Found: ${code}`,
+      title: "✅ Barcode Found!",
+      description: `Code: ${code.slice(0, 12)}...`,
+      duration: 2000,
     });
   };
 
@@ -83,20 +86,24 @@ export const useScanLogic = () => {
       
       console.error('Significant camera error:', error);
       
-      let errorMessage = 'Camera scanning error occurred';
+      let errorMessage = 'Camera error occurred';
+      let errorTitle = '❌ Scanning Issue';
       
       if (error.message.includes('not readable') || error.message.includes('in use')) {
-        errorMessage = 'Camera is busy or being used by another app';
+        errorMessage = 'Camera busy or in use';
+        errorTitle = '📷 Camera Busy';
       } else if (error.message.includes('permission') || error.message.includes('denied')) {
-        errorMessage = 'Camera permission was revoked';
+        errorMessage = 'Camera permission revoked';
+        errorTitle = '🚫 Permission Lost';
         setHasPermission(false);
       }
       
       setScanError(errorMessage);
       toast({
-        title: "Scanning Issue",
+        title: errorTitle,
         description: errorMessage,
         variant: "destructive",
+        duration: 3000,
       });
     }
   };
@@ -104,9 +111,10 @@ export const useScanLogic = () => {
   const handleProcessScan = async () => {
     if (!scannedCode) {
       toast({
-        title: "No Barcode",
+        title: "❗ No Barcode",
         description: "Please scan a barcode first",
         variant: "destructive",
+        duration: 2000,
       });
       return;
     }
@@ -131,17 +139,19 @@ export const useScanLogic = () => {
         console.log('Score calculation completed:', scanResult ? 'Success' : 'Failed');
         
         toast({
-          title: "Product Found!",
+          title: "🎉 Product Found!",
           description: `Analyzed ${productData.product_name || 'product'}`,
+          duration: 2000,
         });
       } else {
         console.log('Step 2: Product not found, generating mock data...');
         scanResult = ScanService.generateMockScanResult();
         
         toast({
-          title: "Product Not Found",
-          description: "Product not in database. Using sample data for demonstration.",
+          title: "⚠️ Product Not Found",
+          description: "Using demo data",
           variant: "destructive",
+          duration: 2500,
         });
       }
       
@@ -161,19 +171,19 @@ export const useScanLogic = () => {
       console.error('=== Error in handleLoadingComplete:', error);
       
       // Provide specific error feedback
-      let errorMessage = "Failed to analyze product. Please try again.";
-      let errorTitle = "Processing Error";
+      let errorMessage = "Failed to analyze product";
+      let errorTitle = "❌ Processing Error";
       
       if (error instanceof Error) {
         if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-          errorMessage = "Network error. Please check your internet connection and try again.";
-          errorTitle = "Connection Error";
+          errorMessage = "Check internet connection";
+          errorTitle = "🌐 Connection Error";
         } else if (error.message.includes('API request failed')) {
-          errorMessage = "Product database is temporarily unavailable. Please try again later.";
-          errorTitle = "Service Unavailable";
+          errorMessage = "Service temporarily unavailable";
+          errorTitle = "🚫 Service Error";
         } else if (error.message.includes('fetch product data')) {
-          errorMessage = "Unable to retrieve product information. Please try scanning again.";
-          errorTitle = "Data Error";
+          errorMessage = "Unable to retrieve product info";
+          errorTitle = "📦 Data Error";
         }
       }
       
@@ -181,6 +191,7 @@ export const useScanLogic = () => {
         title: errorTitle,
         description: errorMessage,
         variant: "destructive",
+        duration: 3000,
       });
       
       setIsLoading(false);
@@ -198,8 +209,9 @@ export const useScanLogic = () => {
     await recordScan(mockResult);
     
     toast({
-      title: MESSAGES.SCAN.TEST_COMPLETE,
+      title: "🧪 Test Complete",
       description: `${mockResult.product.productName} scored ${mockResult.healthyTummiesScore}/100`,
+      duration: 2000,
     });
     
     navigate('/scan-result', { 
