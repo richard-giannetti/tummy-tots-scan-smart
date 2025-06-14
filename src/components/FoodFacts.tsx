@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Book, ArrowRight, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -51,7 +50,7 @@ export const FoodFacts = ({ babyName }: FoodFactsProps) => {
         </div>
       ) : (
         <div className="space-y-3">
-          {progressByType.map((item) => (
+          {progressByType.slice(0, 3).map((item) => (
             <div key={item.foodType} className="space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-gray-700 capitalize">
