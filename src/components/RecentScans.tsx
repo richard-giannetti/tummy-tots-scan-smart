@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, ChevronRight, Package } from 'lucide-react';
+import { Clock, Eye, Package } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -186,7 +186,7 @@ export const RecentScans = () => {
                 <div className={`px-3 py-1 rounded-full text-sm font-bold ${getScoreColor(scan.average_score)} flex-shrink-0`}>
                   {Math.round(scan.average_score)}
                 </div>
-                <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <Eye className="w-4 h-4 text-gray-400 flex-shrink-0" />
               </div>
             </div>
           </div>)}
