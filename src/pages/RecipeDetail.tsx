@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { RecipesService, Recipe } from '@/services/recipesService';
+import { RecipesService, Recipe } from '@/services/recipes';
 import { toast } from '@/hooks/use-toast';
 import { RecipeDetailHeader } from '@/components/recipe-detail/RecipeDetailHeader';
 import { RecipeDetailInfo } from '@/components/recipe-detail/RecipeDetailInfo';

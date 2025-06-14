@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { ArrowLeft, Share2, Heart } from 'lucide-react';
-import { Recipe } from '@/services/recipesService';
+import { Recipe } from '@/services/recipes';
 
 interface RecipeDetailHeaderProps {
   recipe: Recipe;

@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { Clock, Users, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Recipe, RecipesService } from '@/services/recipesService';
+import { Recipe, RecipesService } from '@/services/recipes';
 import { toast } from '@/hooks/use-toast';
 
 interface RecipeCardProps {

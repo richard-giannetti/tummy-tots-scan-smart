@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Clock, Users } from 'lucide-react';
-import { Recipe } from '@/services/recipesService';
+import { Recipe } from '@/services/recipes';
 
 interface RecipeDetailInfoProps {
   recipe: Recipe;
