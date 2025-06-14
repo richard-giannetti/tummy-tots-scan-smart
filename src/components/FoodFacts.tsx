@@ -2,7 +2,8 @@
 import React from 'react';
 import { Book, ArrowRight, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useIntroducedFoodsCount } from '@/hooks/useIntroducedFoodsCount';
+import { useIntroducedFoodsByType } from '@/hooks/useIntroducedFoodsByType';
+import { Progress } from '@/components/ui/progress';
 
 interface FoodFactsProps {
   babyName?: string;
@@ -10,7 +11,7 @@ interface FoodFactsProps {
 
 export const FoodFacts = ({ babyName }: FoodFactsProps) => {
   const navigate = useNavigate();
-  const { count: introducedCount, loading } = useIntroducedFoodsCount();
+  const { progressByType, totalIntroduced, loading } = useIntroducedFoodsByType();
 
   const handleExploreClick = () => {
     navigate('/food-facts');
@@ -33,23 +34,47 @@ export const FoodFacts = ({ babyName }: FoodFactsProps) => {
 
       <div className="mb-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl">
         <p className="text-sm text-gray-700">
-          <span className="font-semibold">📊 Progress:</span> You've introduced {loading ? '...' : introducedCount} foods
+          <span className="font-semibold">📊 Progress:</span> You've introduced {loading ? '...' : totalIntroduced} foods
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-green-50 rounded-xl p-4 text-center">
-          <Book className="w-8 h-8 text-green-600 mx-auto mb-2" />
-          <p className="text-sm font-medium text-green-800">Browse Foods</p>
-          <p className="text-xs text-green-600">Discover safe foods for your baby</p>
+      {loading ? (
+        <div className="space-y-3">
+          <div className="animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+            <div className="h-2 bg-gray-200 rounded"></div>
+          </div>
+          <div className="animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
+            <div className="h-2 bg-gray-200 rounded"></div>
+          </div>
         </div>
-        
-        <div className="bg-blue-50 rounded-xl p-4 text-center">
-          <CheckCircle className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-          <p className="text-sm font-medium text-blue-800">Track Progress</p>
-          <p className="text-xs text-blue-600">Mark foods as introduced</p>
+      ) : (
+        <div className="space-y-3">
+          {progressByType.map((item) => (
+            <div key={item.foodType} className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-700 capitalize">
+                  {item.foodType || 'Other'}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {item.introduced} / {item.total}
+                </span>
+              </div>
+              <Progress 
+                value={item.percentage} 
+                className="h-2"
+              />
+            </div>
+          ))}
+          {progressByType.length === 0 && (
+            <div className="text-center py-4">
+              <p className="text-sm text-gray-500">No food progress to display yet</p>
+              <p className="text-xs text-gray-400 mt-1">Start by marking some foods as introduced!</p>
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </div>
   );
 };
