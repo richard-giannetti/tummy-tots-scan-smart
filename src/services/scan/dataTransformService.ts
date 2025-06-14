@@ -1,43 +1,60 @@
-
 import { ProductData } from '../healthyTummiesScoreService';
 import { ScanResult } from './types';
 
 export class DataTransformService {
   static transformOpenFoodFactsData(productData: any): ProductData {
-    const nutriments = productData.nutriments || {};
+    console.log('Transforming Open Food Facts data:', productData);
     
-    return {
-      nutriscore_grade: productData.nutriscore_grade,
-      nova_group: productData.nova_group,
-      ecoscore_grade: productData.ecoscore_grade,
+    if (!productData) {
+      console.error('No product data provided for transformation');
+      throw new Error('No product data to transform');
+    }
+
+    const nutriments = productData.nutriments || {};
+    console.log('Nutriments data:', nutriments);
+    
+    const transformedData: ProductData = {
+      nutriscore_grade: productData.nutriscore_grade || productData.nutriscore_data?.grade,
+      nova_group: productData.nova_group || productData.nova_groups,
+      ecoscore_grade: productData.ecoscore_grade || productData.ecoscore_data?.grade,
       nutrients_per_100g: {
-        energy_kcal: nutriments.energy_kcal_100g || nutriments['energy-kcal_100g'],
-        proteins: nutriments.proteins_100g,
-        carbohydrates: nutriments.carbohydrates_100g,
-        sugars: nutriments.sugars_100g,
-        fiber: nutriments.fiber_100g,
-        fat: nutriments.fat_100g,
-        saturated_fat: nutriments['saturated-fat_100g'],
-        sodium: nutriments.sodium_100g,
-        iron: nutriments.iron_100g,
-        calcium: nutriments.calcium_100g,
-        vitamin_c: nutriments['vitamin-c_100g'],
-        vitamin_d: nutriments['vitamin-d_100g']
+        energy_kcal: nutriments.energy_kcal_100g || nutriments['energy-kcal_100g'] || nutriments.energy_kcal || 0,
+        proteins: nutriments.proteins_100g || nutriments.proteins || 0,
+        carbohydrates: nutriments.carbohydrates_100g || nutriments.carbohydrates || 0,
+        sugars: nutriments.sugars_100g || nutriments.sugars || 0,
+        fiber: nutriments.fiber_100g || nutriments.fiber || 0,
+        fat: nutriments.fat_100g || nutriments.fat || 0,
+        saturated_fat: nutriments['saturated-fat_100g'] || nutriments.saturated_fat || 0,
+        sodium: nutriments.sodium_100g || nutriments.sodium || 0,
+        iron: nutriments.iron_100g || nutriments.iron,
+        calcium: nutriments.calcium_100g || nutriments.calcium,
+        vitamin_c: nutriments['vitamin-c_100g'] || nutriments.vitamin_c,
+        vitamin_d: nutriments['vitamin-d_100g'] || nutriments.vitamin_d
       },
-      ingredients_text: productData.ingredients_text,
-      allergens: productData.allergens_tags || [],
-      additives: productData.additives_tags || [],
-      product_name: productData.product_name
+      ingredients_text: productData.ingredients_text || productData.ingredients_text_en || '',
+      allergens: productData.allergens_tags || productData.allergens || [],
+      additives: productData.additives_tags || productData.additives || [],
+      product_name: productData.product_name || productData.product_name_en || 'Unknown Product'
     };
+
+    console.log('Transformed data:', transformedData);
+    return transformedData;
   }
 
   static createScanResult(openFoodFactsData: any, scoreResult: any, transformedData: ProductData): ScanResult {
-    return {
+    console.log('Creating scan result from:', { openFoodFactsData, scoreResult, transformedData });
+
+    if (!scoreResult) {
+      console.error('No score result provided');
+      throw new Error('Score calculation failed');
+    }
+
+    const result: ScanResult = {
       product: {
-        productName: openFoodFactsData.product_name || 'Unknown Product',
-        brand: openFoodFactsData.brands || 'Unknown Brand',
-        ingredients: openFoodFactsData.ingredients_text ? 
-          openFoodFactsData.ingredients_text.split(',').map((i: string) => i.trim()) : [],
+        productName: transformedData.product_name || 'Unknown Product',
+        brand: openFoodFactsData.brands || openFoodFactsData.brands_tags?.[0] || 'Unknown Brand',
+        ingredients: transformedData.ingredients_text ? 
+          transformedData.ingredients_text.split(',').map((i: string) => i.trim()).filter(Boolean) : [],
         nutritionalInfo: {
           calories: transformedData.nutrients_per_100g?.energy_kcal || 0,
           protein: transformedData.nutrients_per_100g?.proteins || 0,
@@ -49,23 +66,32 @@ export class DataTransformService {
         },
         allergens: transformedData.allergens || [],
         additives: transformedData.additives || [],
-        certifications: openFoodFactsData.labels_tags || [],
-        imageUrl: openFoodFactsData.image_url
+        certifications: openFoodFactsData.labels_tags || openFoodFactsData.labels || [],
+        imageUrl: openFoodFactsData.image_url || openFoodFactsData.image_front_url
       },
-      healthyTummiesScore: scoreResult.final_score,
-      scoreInterpretation: scoreResult.score_interpretation,
-      scoreEmoji: scoreResult.score_emoji,
-      scoreColor: scoreResult.score_color,
-      primaryMessage: scoreResult.primary_message,
-      detailedExplanations: scoreResult.detailed_explanations,
-      breakdown: scoreResult.breakdown,
-      nutriscore: transformedData.nutriscore_grade || 'Unknown',
+      healthyTummiesScore: scoreResult.final_score || 50,
+      scoreInterpretation: scoreResult.score_interpretation || 'Moderate',
+      scoreEmoji: scoreResult.score_emoji || '😐',
+      scoreColor: scoreResult.score_color || 'text-yellow-600',
+      primaryMessage: scoreResult.primary_message || 'Product analyzed',
+      detailedExplanations: scoreResult.detailed_explanations || [],
+      breakdown: scoreResult.breakdown || {
+        age_appropriateness: 50,
+        nutritional_quality: 50,
+        safety_processing: 50,
+        personalization: 50,
+        external_scores: 50
+      },
+      nutriscore: transformedData.nutriscore_grade?.toUpperCase() || 'Unknown',
       novaGroup: transformedData.nova_group || 0,
-      ecoscore: transformedData.ecoscore_grade || 'Unknown',
-      ageAppropriate: scoreResult.breakdown.age_appropriateness > 50,
+      ecoscore: transformedData.ecoscore_grade?.toUpperCase() || 'Unknown',
+      ageAppropriate: (scoreResult.breakdown?.age_appropriateness || 50) > 50,
       recommendations: this.generateRecommendations(scoreResult),
       warningFlags: this.generateWarningFlags(scoreResult, transformedData)
     };
+
+    console.log('Created scan result:', result);
+    return result;
   }
 
   static generateRecommendations(scoreResult: any): string[] {

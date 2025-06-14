@@ -117,44 +117,72 @@ export const useScanLogic = () => {
 
   const handleLoadingComplete = async () => {
     try {
-      console.log('Processing barcode:', scannedCode);
+      console.log('=== Starting product analysis for barcode:', scannedCode);
       
+      // Step 1: Fetch product data from Open Food Facts
+      console.log('Step 1: Fetching product data...');
       const productData = await ScanService.getProductByBarcode(scannedCode);
+      console.log('Product data received:', productData ? 'Success' : 'No data');
       
       let scanResult;
       if (productData) {
-        scanResult = ScanService.calculateHealthyTummiesScore(productData, 8);
-        console.log('Real product found and analyzed:', scanResult);
+        console.log('Step 2: Calculating Healthy Tummies Score...');
+        scanResult = await ScanService.calculateHealthyTummiesScore(productData, 8);
+        console.log('Score calculation completed:', scanResult ? 'Success' : 'Failed');
         
         toast({
           title: "Product Found!",
-          description: `Analyzed ${productData.productName}`,
+          description: `Analyzed ${productData.product_name || 'product'}`,
         });
       } else {
+        console.log('Step 2: Product not found, generating mock data...');
         scanResult = ScanService.generateMockScanResult();
-        console.log('Product not found, using mock data:', scanResult);
         
         toast({
           title: "Product Not Found",
-          description: "Using sample data for demonstration",
+          description: "Product not in database. Using sample data for demonstration.",
+          variant: "destructive",
         });
       }
       
+      console.log('Step 3: Recording scan...');
       await recordScan(scanResult, scannedCode);
+      console.log('Scan recorded successfully');
       
+      console.log('Step 4: Navigating to results...');
       navigate('/scan-result', { 
         state: { 
           scanResult,
           barcode: scannedCode 
         }
       });
+      
     } catch (error) {
-      console.error('Error processing scan:', error);
+      console.error('=== Error in handleLoadingComplete:', error);
+      
+      // Provide specific error feedback
+      let errorMessage = "Failed to analyze product. Please try again.";
+      let errorTitle = "Processing Error";
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          errorMessage = "Network error. Please check your internet connection and try again.";
+          errorTitle = "Connection Error";
+        } else if (error.message.includes('API request failed')) {
+          errorMessage = "Product database is temporarily unavailable. Please try again later.";
+          errorTitle = "Service Unavailable";
+        } else if (error.message.includes('fetch product data')) {
+          errorMessage = "Unable to retrieve product information. Please try scanning again.";
+          errorTitle = "Data Error";
+        }
+      }
+      
       toast({
-        title: "Processing Error",
-        description: "Failed to analyze product. Please try again.",
+        title: errorTitle,
+        description: errorMessage,
         variant: "destructive",
       });
+      
       setIsLoading(false);
     }
   };
