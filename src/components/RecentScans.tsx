@@ -169,7 +169,12 @@ export const RecentScans = () => {
       </div>
 
       <div className="space-y-3">
-        {recentScans.map(scan => <div key={scan.id} onClick={() => handleScanClick(scan)} className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer group overflow-hidden">
+        {recentScans.map(scan => 
+          <div
+            key={scan.id}
+            onClick={() => handleScanClick(scan)}
+            className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer group overflow-hidden border border-gray-200 bg-gray-50/80"
+          >
             <div className="p-4">
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
@@ -189,7 +194,8 @@ export const RecentScans = () => {
                 <Eye className="w-4 h-4 text-gray-400 flex-shrink-0" />
               </div>
             </div>
-          </div>)}
+          </div>
+        )}
       </div>
     </div>;
 };
