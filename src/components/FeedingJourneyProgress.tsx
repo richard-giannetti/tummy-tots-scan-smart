@@ -91,20 +91,6 @@ export const FeedingJourneyProgress = ({
         </div>
       </div>
 
-      {/* Streak Counter */}
-      <div className="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl">
-        <div className="flex items-center">
-          <Star className="w-4 h-4 text-orange-500 mr-2" />
-          <span className="text-sm font-medium text-gray-800">Daily Streak</span>
-        </div>
-        <div className="text-right">
-          <div className="text-lg font-bold text-orange-600">{currentStreak}</div>
-          <div className="text-xs text-gray-500">
-            {currentStreak === 1 ? 'day' : 'days'}
-          </div>
-        </div>
-      </div>
-
       {/* Encouraging Message */}
       <div className="mt-4 p-3 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl">
         <p className="text-sm text-gray-700 text-center">
