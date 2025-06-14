@@ -67,7 +67,8 @@ const ScanLoadingScreen = ({ onComplete }: ScanLoadingScreenProps) => {
   }, [currentStepIndex, onComplete]);
 
   const currentStep = loadingSteps[currentStepIndex];
-  const progress = ((currentStepIndex + 1) / loadingSteps.length) * 100;
+  // Fix progress calculation to never exceed 100%
+  const progress = Math.min((currentStepIndex / loadingSteps.length) * 100, 100);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
