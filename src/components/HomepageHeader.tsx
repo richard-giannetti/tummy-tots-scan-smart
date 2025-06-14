@@ -21,8 +21,12 @@ export const HomepageHeader = ({
   return (
     <div className="flex items-center justify-between p-4 bg-white/80 backdrop-blur-sm shadow-sm">
       <div className="flex items-center">
-        <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center mr-3">
-          <span className="text-white font-bold text-sm">HT</span>
+        <div className="w-10 h-10 rounded-full flex items-center justify-center mr-3 overflow-hidden">
+          <img 
+            src="/lovable-uploads/e2bdb845-2ddc-4739-a1cd-4a311c9d32e0.png" 
+            alt="Healthy Tummies Logo"
+            className="w-full h-full object-cover"
+          />
         </div>
         <h1 className="text-xl font-bold text-gray-800">Healthy Tummies</h1>
       </div>
