@@ -132,6 +132,36 @@ export class RecipesService {
   }
 
   /**
+   * Get recipe interaction for current user and specific recipe
+   */
+  static async getRecipeInteraction(recipeId: string): Promise<RecipeInteractionResponse> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        return { success: false, error: 'User not authenticated' };
+      }
+
+      const { data: interaction, error } = await supabase
+        .from('recipe_interactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('recipe_id', recipeId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('RecipesService: Error fetching recipe interaction:', error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, interaction };
+    } catch (error: any) {
+      console.error('RecipesService: Unexpected error fetching recipe interaction:', error);
+      return { success: false, error: error.message || 'An unexpected error occurred' };
+    }
+  }
+
+  /**
    * Mark recipe as tried or untried
    */
   static async updateRecipeInteraction(recipeId: string, tried: boolean, rating?: number): Promise<RecipeInteractionResponse> {

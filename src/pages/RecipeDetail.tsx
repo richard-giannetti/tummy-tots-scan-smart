@@ -12,6 +12,7 @@ export const RecipeDetail = () => {
   const [tried, setTried] = useState(false);
   const [rating, setRating] = useState(0);
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
+  const [updatingTried, setUpdatingTried] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -26,6 +27,8 @@ export const RecipeDetail = () => {
       
       if (result.success && result.recipe) {
         setRecipe(result.recipe);
+        // Load the current interaction status for this recipe
+        await loadRecipeInteraction(recipeId);
       } else {
         toast({
           title: "Error",
@@ -46,28 +49,95 @@ export const RecipeDetail = () => {
     }
   };
 
-  const handleTriedToggle = () => {
-    setTried(!tried);
-    toast({
-      title: tried ? "Removed from tried recipes" : "Added to tried recipes",
-      description: tried ? "Recipe unmarked as tried" : "Great! Keep track of your favorites",
-    });
+  const loadRecipeInteraction = async (recipeId: string) => {
+    try {
+      const interaction = await RecipesService.getRecipeInteraction(recipeId);
+      if (interaction.success && interaction.interaction) {
+        setTried(interaction.interaction.tried);
+        setRating(interaction.interaction.rating || 0);
+      }
+    } catch (error) {
+      console.error('Error loading recipe interaction:', error);
+    }
   };
 
-  const handleRating = (newRating: number) => {
-    setRating(newRating);
-    const ratingLabels = {
-      1: "Baby didn't like it",
-      2: "Not a favorite", 
-      3: "It was okay",
-      4: "Baby enjoyed it",
-      5: "Baby loved it!"
-    };
+  const handleTriedToggle = async () => {
+    if (!recipe) return;
     
-    toast({
-      title: "Recipe rated!",
-      description: ratingLabels[newRating as keyof typeof ratingLabels],
-    });
+    try {
+      setUpdatingTried(true);
+      const newTriedStatus = !tried;
+      
+      const result = await RecipesService.updateRecipeInteraction(
+        recipe._id, 
+        newTriedStatus, 
+        rating > 0 ? rating : undefined
+      );
+      
+      if (result.success) {
+        setTried(newTriedStatus);
+        toast({
+          title: newTriedStatus ? "Added to tried recipes" : "Removed from tried recipes",
+          description: newTriedStatus ? "Great! Keep track of your favorites" : "Recipe unmarked as tried",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to update recipe status",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error updating recipe interaction:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update recipe status",
+        variant: "destructive",
+      });
+    } finally {
+      setUpdatingTried(false);
+    }
+  };
+
+  const handleRating = async (newRating: number) => {
+    if (!recipe) return;
+    
+    try {
+      const result = await RecipesService.updateRecipeInteraction(
+        recipe._id, 
+        tried, 
+        newRating
+      );
+      
+      if (result.success) {
+        setRating(newRating);
+        const ratingLabels = {
+          1: "Baby didn't like it",
+          2: "Not a favorite", 
+          3: "It was okay",
+          4: "Baby enjoyed it",
+          5: "Baby loved it!"
+        };
+        
+        toast({
+          title: "Recipe rated!",
+          description: ratingLabels[newRating as keyof typeof ratingLabels],
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to save rating",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error saving rating:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save rating",
+        variant: "destructive",
+      });
+    }
   };
 
   const toggleIngredientCheck = (index: number) => {
@@ -274,13 +344,14 @@ export const RecipeDetail = () => {
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <button
                 onClick={handleTriedToggle}
-                className={`px-6 py-3 rounded-xl font-medium transition-colors ${
+                disabled={updatingTried}
+                className={`px-6 py-3 rounded-xl font-medium transition-colors disabled:opacity-50 ${
                   tried 
                     ? 'bg-green-100 text-green-700 hover:bg-green-200' 
                     : 'bg-pink-100 text-pink-700 hover:bg-pink-200'
                 }`}
               >
-                {tried ? '✓ Tried this recipe' : 'Mark as tried'}
+                {updatingTried ? '...' : (tried ? '✓ Tried this recipe' : 'Mark as tried')}
               </button>
               
               <div className="flex items-center gap-2">
