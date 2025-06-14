@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Clock, Users, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -13,9 +12,12 @@ export const RecipeCard = ({ recipe }: RecipeCardProps) => {
   const navigate = useNavigate();
   const [isFavorited, setIsFavorited] = useState(false);
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+  const [isTried, setIsTried] = useState(false);
+  const [isTogglingTried, setIsTogglingTried] = useState(false);
 
   useEffect(() => {
     checkFavoriteStatus();
+    checkTriedStatus();
   }, [recipe._id]);
 
   const checkFavoriteStatus = async () => {
@@ -26,6 +28,17 @@ export const RecipeCard = ({ recipe }: RecipeCardProps) => {
       }
     } catch (error) {
       console.error('Error checking favorite status:', error);
+    }
+  };
+
+  const checkTriedStatus = async () => {
+    try {
+      const interaction = await RecipesService.getRecipeInteraction(recipe._id);
+      if (interaction.success && interaction.interaction) {
+        setIsTried(interaction.interaction.tried);
+      }
+    } catch (error) {
+      console.error('Error checking tried status:', error);
     }
   };
 
@@ -60,6 +73,43 @@ export const RecipeCard = ({ recipe }: RecipeCardProps) => {
       });
     } finally {
       setIsTogglingFavorite(false);
+    }
+  };
+
+  const handleTriedToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation when clicking tried button
+    
+    try {
+      setIsTogglingTried(true);
+      const newTriedStatus = !isTried;
+      
+      const result = await RecipesService.updateRecipeInteraction(
+        recipe._id, 
+        newTriedStatus
+      );
+      
+      if (result.success) {
+        setIsTried(newTriedStatus);
+        toast({
+          title: newTriedStatus ? "Marked as tried!" : "Unmarked as tried",
+          description: newTriedStatus ? "Great! Keep track of your tried recipes" : "Recipe unmarked as tried",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to update tried status",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error toggling tried status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update tried status",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTogglingTried(false);
     }
   };
 
@@ -153,8 +203,16 @@ export const RecipeCard = ({ recipe }: RecipeCardProps) => {
         )}
         
         <div className="mt-3 pt-3 border-t border-gray-100">
-          <button className="text-xs text-pink-600 font-medium hover:text-pink-700 transition-colors">
-            Mark as Tried
+          <button 
+            onClick={handleTriedToggle}
+            disabled={isTogglingTried}
+            className={`text-xs font-medium transition-colors ${
+              isTried 
+                ? 'text-green-600 hover:text-green-700' 
+                : 'text-pink-600 hover:text-pink-700'
+            }`}
+          >
+            {isTogglingTried ? '...' : (isTried ? '✓ Tried' : 'Mark as Tried')}
           </button>
         </div>
       </div>
