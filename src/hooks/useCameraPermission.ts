@@ -12,6 +12,14 @@ interface CameraPermissionHook {
   error: string | null;
 }
 
+// Extend the global Window interface for older browser compatibility
+declare global {
+  interface Window {
+    webkitRTCPeerConnection?: typeof RTCPeerConnection;
+    mozRTCPeerConnection?: typeof RTCPeerConnection;
+  }
+}
+
 const PERMISSION_CACHE_KEY = 'camera_permission_state';
 const PERMISSION_CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
 

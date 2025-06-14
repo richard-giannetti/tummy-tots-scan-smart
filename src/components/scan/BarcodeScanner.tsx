@@ -78,7 +78,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
               onUpdate={(err, result) => {
                 if (result) {
                   onScanSuccess(result.getText());
-                } else if (err && !err.message?.includes('No MultiFormat Readers')) {
+                } else if (err && typeof err === 'object' && err !== null && 'message' in err && !String(err.message).includes('No MultiFormat Readers')) {
                   onScanError(err);
                 }
               }}
