@@ -381,6 +381,44 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activities: {
+        Row: {
+          activity_data: Json | null
+          activity_type: string
+          id: string
+          page_path: string | null
+          session_id: string | null
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          activity_data?: Json | null
+          activity_type: string
+          id?: string
+          page_path?: string | null
+          session_id?: string | null
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          activity_data?: Json | null
+          activity_type?: string
+          id?: string
+          page_path?: string | null
+          session_id?: string | null
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_activities_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "user_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_progress: {
         Row: {
           achievements: string[]
@@ -419,6 +457,45 @@ export type Database = {
           longest_streak?: number
           total_points?: number
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          actions_performed: number | null
+          browser_info: string | null
+          created_at: string
+          device_type: string | null
+          duration_minutes: number | null
+          id: string
+          pages_visited: number | null
+          session_end: string | null
+          session_start: string
+          user_id: string
+        }
+        Insert: {
+          actions_performed?: number | null
+          browser_info?: string | null
+          created_at?: string
+          device_type?: string | null
+          duration_minutes?: number | null
+          id?: string
+          pages_visited?: number | null
+          session_end?: string | null
+          session_start?: string
+          user_id: string
+        }
+        Update: {
+          actions_performed?: number | null
+          browser_info?: string | null
+          created_at?: string
+          device_type?: string | null
+          duration_minutes?: number | null
+          id?: string
+          pages_visited?: number | null
+          session_end?: string | null
+          session_start?: string
           user_id?: string
         }
         Relationships: []
@@ -477,9 +554,52 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      cleanup_old_activities: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       cleanup_old_scan_summaries: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      end_user_session: {
+        Args: {
+          session_uuid: string
+          pages_visited_param?: number
+          actions_performed_param?: number
+        }
+        Returns: undefined
+      }
+      get_user_usage_stats: {
+        Args: { user_uuid: string }
+        Returns: {
+          total_sessions: number
+          total_time_minutes: number
+          avg_session_duration: number
+          total_activities: number
+          last_activity: string
+          most_active_day: string
+          weekly_sessions: number
+          monthly_sessions: number
+        }[]
+      }
+      log_user_activity: {
+        Args: {
+          user_uuid: string
+          activity_type_param: string
+          session_uuid?: string
+          activity_data_param?: Json
+          page_path_param?: string
+        }
+        Returns: undefined
+      }
+      start_user_session: {
+        Args: {
+          user_uuid: string
+          device_type_param?: string
+          browser_info_param?: string
+        }
+        Returns: string
       }
       update_scan_tracking: {
         Args:
