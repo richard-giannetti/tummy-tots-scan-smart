@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Camera, CheckCircle, AlertCircle } from 'lucide-react';
-import BarcodeScannerComponent from 'react-qr-barcode-scanner';
+import { BrowserMultiFormatReader } from '@zxing/browser';
 
 interface BarcodeScannerProps {
   isCameraActive: boolean;
@@ -28,6 +28,49 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
   onProcessScan,
   onScanAgain
 }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const codeReader = useRef<BrowserMultiFormatReader | null>(null);
+
+  useEffect(() => {
+    if (isCameraActive && hasPermission && videoRef.current) {
+      startScanning();
+    }
+    
+    return () => {
+      if (codeReader.current) {
+        codeReader.current.reset();
+      }
+    };
+  }, [isCameraActive, hasPermission]);
+
+  const startScanning = async () => {
+    try {
+      if (!codeReader.current) {
+        codeReader.current = new BrowserMultiFormatReader();
+      }
+
+      const devices = await codeReader.current.listVideoInputDevices();
+      const selectedDeviceId = devices.length > 0 ? devices[0].deviceId : undefined;
+
+      if (videoRef.current) {
+        codeReader.current.decodeFromVideoDevice(
+          selectedDeviceId,
+          videoRef.current,
+          (result, error) => {
+            if (result) {
+              onScanSuccess(result.getText());
+            } else if (error && !error.message.includes('No MultiFormat Readers')) {
+              onScanError(error);
+            }
+          }
+        );
+      }
+    } catch (error) {
+      console.error('Failed to start scanning:', error);
+      onScanError(error);
+    }
+  };
+
   return (
     <div className="bg-white rounded-2xl p-6 shadow-lg">
       <div className="flex items-center justify-between mb-4">
@@ -72,16 +115,12 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
       {isCameraActive && hasPermission && (
         <div className="space-y-4">
           <div className="relative bg-black rounded-xl overflow-hidden" style={{ aspectRatio: '4/3' }}>
-            <BarcodeScannerComponent
-              width="100%"
-              height="100%"
-              onUpdate={(err, result) => {
-                if (result) {
-                  onScanSuccess(result.getText());
-                } else if (err && typeof err === 'object' && err !== null && 'message' in err && !String(err.message).includes('No MultiFormat Readers')) {
-                  onScanError(err);
-                }
-              }}
+            <video
+              ref={videoRef}
+              className="w-full h-full object-cover"
+              autoPlay
+              playsInline
+              muted
             />
             {/* Scanning overlay */}
             <div className="absolute inset-0 border-2 border-white/20 rounded-xl">
